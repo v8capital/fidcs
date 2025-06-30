@@ -20,6 +20,7 @@ venv.bak/
 # Arquivos do editor
 .vscode/
 .idea/
+idea/
 
 # Arquivos de log
 *.log
