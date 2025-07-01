@@ -334,6 +334,24 @@ class Excel_Transformer(object):
             date = self.__convert_date(indexes)  # mandando a coluna ITEM
             table_copy.index = pd.Index(date)
 
+        elif self.type == "VALOREM":
+            for i in range(table_copy.shape[1]):
+                if table_copy.iloc[0, i] == "Descrição/Período":
+                    indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
+            print(table_copy)
+            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy = table_copy.drop(table_copy.index[0])
+
+            table_copy = table_copy.dropna(subset=["Descrição/Período"])
+
+            indexes = indexes.dropna()
+
+            table_copy = self.__check_columns(table_copy)
+            table_copy = self.__clean_column_names(table_copy)
+            table_copy.reset_index(drop=True, inplace=True)
+
+            table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+
 
 
         print(table_copy.columns)
