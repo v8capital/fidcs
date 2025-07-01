@@ -312,6 +312,29 @@ class Excel_Transformer(object):
                 ~(pd.to_datetime(table_copy.index, errors='coerce')).isna()
             ]
 
+        elif self.type == "ONE7":
+            #TODO AJEITAR O YAML QUE O GPT TÁ TROLL
+            for i in range(table_copy.shape[1]):
+                if table_copy.iloc[0, i] == "Item":
+                    indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
+
+            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy = table_copy.drop(table_copy.index[0])
+
+            # podemelhorar aqui, mas por enquanto fica assim
+            print(indexes)
+
+            print(table_copy.columns)
+
+            table_copy = self.__check_columns(table_copy)
+
+            table_copy = self.__create_10_biggests(table_copy, "Sacado")
+            table_copy = self.__create_10_biggests(table_copy, "Cedente")
+            print(table_copy)
+            date = self.__convert_date(indexes)  # mandando a coluna ITEM
+            table_copy.index = pd.Index(date)
+
+
 
         print(table_copy.columns)
         table_copy.to_csv("./out/gto.csv", sep = ";",  encoding = "utf-8-sig")
