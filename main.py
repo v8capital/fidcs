@@ -22,6 +22,7 @@ def main():
         excel.read_excel(path, sheet)
         excel.transform_table()
 
+    # TODO AJEITAR O VALOR NEGATIVO DO PDD DA SOLAR, fazer depois
     print()
 
 if __name__ == "__main__":

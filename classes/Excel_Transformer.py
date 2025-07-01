@@ -1,10 +1,14 @@
 import pandas as pd
 import numpy as np
 
+from functools import reduce
+
 import yaml
 import logging
 import warnings
 import re
+
+pd.set_option('future.no_silent_downcasting', True)
 
 PATH = './YAMLs/'
 def read_yaml(path):
@@ -14,6 +18,29 @@ def read_yaml(path):
     return dados  # Retorna como dicionário: {coluna_final: [possibilidades]}
 
 class Excel_Transformer(object):
+
+    def __convert_to_double(self, data):
+        # Define valores a substituir por NaN
+        invalid_entries = ["-", " ", ""]  # você pode adicionar outros se necessário
+        data = data.replace(invalid_entries, np.nan).infer_objects(copy=False)
+
+        # Verifica e printa valores inválidos que viraram NaN por não serem numéricos
+        for col in data.columns:
+            for idx, val in data[col].items():
+                # Ignora valores não escalares
+                if not pd.api.types.is_scalar(val):
+                    continue
+                # Se for NaN, continue
+                if pd.isna(val):
+                    continue
+                try:
+                    float(val)
+                except Exception:
+                    print(f"Valor inválido convertido para NaN: '{val}' | Coluna: '{col}' | Linha: {idx}")
+                    data.at[idx, col] = np.nan
+
+        # Converte o restante para float (double)
+        return data.astype("double")
 
     def __correct_values(self, data):
         # multiplica todas as colunas no YAML que possuem valor R1000 por 1000
@@ -69,9 +96,9 @@ class Excel_Transformer(object):
             for padroes in (assets, dc)
         ]
 
-        print(assets)
+        #print(assets)
 
-        print(dc)
+        #print(dc)
         data[assets] = data[assets].multiply(data[dc[0]], axis = 0)
         return data
 
@@ -209,18 +236,17 @@ class Excel_Transformer(object):
             tables = []
             for sheet in sheet_names:
                 df = pd.read_excel(path, sheet_name=sheet, header = None)
-                #print(df)
                 df = df.T
                 #print(df)
                 df.reset_index(drop=True, inplace=True)
                 tables.append(df)
-            self.raw_table = pd.concat(tables, axis = 1)
-            self.raw_table = self.raw_table.dropna(how='all')
-            self.table = self.raw_table.copy()
+            self.raw_table = tables.copy()
+            self.table = pd.concat(tables, axis = 1)
+            self.table = self.table.dropna(how='all')
         else:
             self.raw_table = pd.read_excel(path)
             self.table = self.raw_table.T
-
+        #self.table.to_csv("./out/raw_" + name + ".csv", sep = ";",  encoding = "utf-8-sig")
         self.name = self.__check_name(name, patterns_fidcs)
 
 
@@ -263,15 +289,15 @@ class Excel_Transformer(object):
 
             #print("teste")
             date = self.__convert_date(indexes) # mandando a coluna ITEM
-            table_copy.index = pd.Index(date) # talvez colocar name = "Data"
+            table_copy.index = pd.Index(date).infer_objects() # talvez colocar name = "Data"
 
         elif self.type == "ORRAM":
-            print(table_copy)
+            #print(table_copy)
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
 
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
             table_copy = table_copy.dropna(subset=["Item"])
 
@@ -281,12 +307,13 @@ class Excel_Transformer(object):
             table_copy = self.__correct_assets(table_copy)
             table_copy.index = indexes
             #table_copy = self.create_total_liquid()
+
         elif self.type == "PATTERN1":
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
 
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
             table_copy = table_copy.dropna(subset=["Item"])
@@ -296,7 +323,7 @@ class Excel_Transformer(object):
             table_copy = self.__check_columns(table_copy)
             table_copy.reset_index(drop=True, inplace=True)
 
-            table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+            table_copy.index = pd.Index(indexes).infer_objects()
 
             # talvez mudar o nome depois
             table_copy = self.__create_10_biggests(table_copy, "Sacado")
@@ -307,7 +334,7 @@ class Excel_Transformer(object):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
 
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
             table_copy = table_copy.dropna(subset=["Item"])
@@ -319,28 +346,38 @@ class Excel_Transformer(object):
 
             table_copy = self.__correct_assets(table_copy)
 
-            table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+            table_copy.index = pd.Index(indexes).infer_objects()
 
             # talvez mudar o nome depois
         elif self.type == "MULTIASSET":
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
+            final_table = []
+            for table in self.raw_table:
+                table = table.dropna(how='all')
+                for i in range(table.shape[1]):
+                    if table.iloc[0, i] == "Item":
+                        indexes = table_copy.iloc[1:, i] # pegando a coluna "itens" de cada uma das sheets
+                table.columns = table.iloc[0, :].infer_objects()
+                table = table.drop(table.index[0])
+                #print(table.columns)
+                table = table.dropna(subset=["Item"])
+                # aqui to apagando as linhas que não tem valor na data,
+                # ou seja basicamente to rodando o remove rows before
+                # que agora tá inutilizado, depois tirar depois
 
+                #print(table)
+                final_table.append(table)
 
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
-            table_copy = table_copy.drop(table_copy.index[0])
+            #table_copy = pd.concat(final_table, axis = 1)
+            table_copy = reduce(lambda left, right: pd.merge(left, right, on='Item', how='inner'), final_table)
 
-            table_copy = table_copy.dropna(subset=["Item"])
-            #podemelhorar aqui, mas por enquanto fica assim
+            indexes = table_copy["Item"]
 
-            indexes = self.__remove_rows_before(indexes, "2021-01-01")
-            #print(indexes)
-
-            indexes = indexes.dropna()
             table_copy = self.__check_columns(table_copy)
-
             table_copy = self.__correct_assets(table_copy)
+
             table_copy.index = indexes
 
         elif self.type == "MULTIPLIKE":
@@ -348,7 +385,7 @@ class Excel_Transformer(object):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
 
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
             table_copy = table_copy.dropna(subset=["Item"])
@@ -374,7 +411,7 @@ class Excel_Transformer(object):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
 
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
             # podemelhorar aqui, mas por enquanto fica assim
@@ -388,14 +425,14 @@ class Excel_Transformer(object):
             table_copy = self.__create_10_biggests(table_copy, "Cedente")
             #print(table_copy)
             date = self.__convert_date(indexes)  # mandando a coluna ITEM
-            table_copy.index = pd.Index(date)
+            table_copy.index = pd.Index(date).infer_objects()
 
         elif self.type == "VALOREM":
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Descrição/Período":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
             #print(table_copy)
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
             table_copy = table_copy.dropna(subset=["Descrição/Período"])
@@ -406,14 +443,14 @@ class Excel_Transformer(object):
             table_copy = self.__clean_column_names(table_copy)
             table_copy.reset_index(drop=True, inplace=True)
 
-            table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+            table_copy.index = pd.Index(indexes).infer_objects()
         elif self.type == "SOLAR":
             #print(table_copy)
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
             #print(table_copy)
-            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy.columns = table_copy.iloc[0, :].infer_objects()  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
             table_copy = table_copy.dropna(subset=["Item"])
@@ -423,7 +460,7 @@ class Excel_Transformer(object):
             table_copy = self.__check_columns(table_copy)
             table_copy.reset_index(drop=True, inplace=True)
 
-            table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+            table_copy.index = pd.Index(indexes).infer_objects()
 
             table_copy = self.__correct_values(table_copy)
             table_copy = self.__correct_percentages(table_copy, "PL Total Classe (R$ mil)")
@@ -432,11 +469,19 @@ class Excel_Transformer(object):
             table_copy = self.__create_10_biggests(table_copy, "Cedente")
 
         #print(table_copy.columns)
+        table_copy.index.name = "Data"
+
+        table_copy = self.__convert_to_double(table_copy)
+
         path_out = "./out/" + self.name + ".csv" # tem q colocar a data depois
         table_copy.to_csv(path_out, sep = ";",  encoding = "utf-8-sig")
         # so pra ver
-
+        print(table_copy.info())
+        #print(table_copy.info())
         self.table = table_copy.copy()
 
         #print(table_copy)
         # começar tirando os unnamed
+
+# apenas o check columns e o check name devem ser mantidos na classe
+# todos os outros irão para a classe FIDC, junto do self.pattern, self.table e afins
