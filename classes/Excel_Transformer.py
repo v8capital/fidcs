@@ -351,6 +351,29 @@ class Excel_Transformer(object):
             table_copy.reset_index(drop=True, inplace=True)
 
             table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+        elif self.type == "SOLAR":
+            print(table_copy)
+            for i in range(table_copy.shape[1]):
+                if table_copy.iloc[0, i] == "Item":
+                    indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
+            print(table_copy)
+            table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
+            table_copy = table_copy.drop(table_copy.index[0])
+
+            table_copy = table_copy.dropna(subset=["Item"])
+
+            indexes = indexes.dropna()
+
+            table_copy = self.__check_columns(table_copy)
+            table_copy.reset_index(drop=True, inplace=True)
+
+            table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
+
+            table_copy = self.__correct_values(table_copy)
+            table_copy = self.__correct_percentages(table_copy, "PL Total Classe (R$ mil)")
+
+            table_copy = self.__create_10_biggests(table_copy, "Sacado")
+            table_copy = self.__create_10_biggests(table_copy, "Cedente")
 
 
 
