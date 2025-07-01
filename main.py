@@ -1,9 +1,10 @@
 import pandas as pd
 from classes.FIDC import FIDC
 from classes.Excel_Transformer import Excel_Transformer
+from classes.Grouper import Grouper
 
 def main():
-    excel = Excel_Transformer()
+    """excel = Excel_Transformer()
 
     arquivos = [
         ("./examples/Relatório - FIDC PAGOL - 2025.04.xlsx", "PAGOL"),
@@ -20,10 +21,18 @@ def main():
 
     for path, sheet in arquivos:
         excel.read_excel(path, sheet)
-        excel.transform_table()
+        excel.transform_table()"""
+
+
+    grp = Grouper()
+
+    grp.read_csvs("./out/")
+
+    grp.result()
 
     # TODO AJEITAR O VALOR NEGATIVO DO PDD DA SOLAR, fazer depois
     print()
+
 
 if __name__ == "__main__":
     main()
