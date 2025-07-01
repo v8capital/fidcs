@@ -205,13 +205,13 @@ class Excel_Transformer(object):
         patterns_fidcs = read_yaml(PATH + 'FIDCs.yaml')
 
         if len(sheet_names) > 1:
-            print("OPAAAA")
+            #print("OPAAAA")
             tables = []
             for sheet in sheet_names:
                 df = pd.read_excel(path, sheet_name=sheet, header = None)
-                print(df)
+                #print(df)
                 df = df.T
-                print(df)
+                #print(df)
                 df.reset_index(drop=True, inplace=True)
                 tables.append(df)
             self.raw_table = pd.concat(tables, axis = 1)
@@ -335,7 +335,7 @@ class Excel_Transformer(object):
             #podemelhorar aqui, mas por enquanto fica assim
 
             indexes = self.__remove_rows_before(indexes, "2021-01-01")
-            print(indexes)
+            #print(indexes)
 
             indexes = indexes.dropna()
             table_copy = self.__check_columns(table_copy)
@@ -353,10 +353,10 @@ class Excel_Transformer(object):
 
             table_copy = table_copy.dropna(subset=["Item"])
             # podemelhorar aqui, mas por enquanto fica assim
-            print(indexes)
+            #print(indexes)
 
             indexes = indexes.dropna()
-            print(table_copy.columns)
+            #print(table_copy.columns)
             table_copy = self.__check_columns(table_copy)
 
             table_copy = self.__create_10_biggests(table_copy, "Sacado")
@@ -378,15 +378,15 @@ class Excel_Transformer(object):
             table_copy = table_copy.drop(table_copy.index[0])
 
             # podemelhorar aqui, mas por enquanto fica assim
-            print(indexes)
+            #print(indexes)
 
-            print(table_copy.columns)
+            #print(table_copy.columns)
 
             table_copy = self.__check_columns(table_copy)
 
             table_copy = self.__create_10_biggests(table_copy, "Sacado")
             table_copy = self.__create_10_biggests(table_copy, "Cedente")
-            print(table_copy)
+            #print(table_copy)
             date = self.__convert_date(indexes)  # mandando a coluna ITEM
             table_copy.index = pd.Index(date)
 
@@ -394,7 +394,7 @@ class Excel_Transformer(object):
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Descrição/Período":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
-            print(table_copy)
+            #print(table_copy)
             table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
@@ -408,11 +408,11 @@ class Excel_Transformer(object):
 
             table_copy.index = pd.Index(indexes) # talvez colocar name = "Data"
         elif self.type == "SOLAR":
-            print(table_copy)
+            #print(table_copy)
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
-            print(table_copy)
+            #print(table_copy)
             table_copy.columns = table_copy.iloc[0, :]  # pegando as colunas, colocando no lugar e apagando dps
             table_copy = table_copy.drop(table_copy.index[0])
 
@@ -431,10 +431,9 @@ class Excel_Transformer(object):
             table_copy = self.__create_10_biggests(table_copy, "Sacado")
             table_copy = self.__create_10_biggests(table_copy, "Cedente")
 
-
-
-        print(table_copy.columns)
-        table_copy.to_csv("./out/gto.csv", sep = ";",  encoding = "utf-8-sig")
+        #print(table_copy.columns)
+        path_out = "./out/" + self.name + ".csv" # tem q colocar a data depois
+        table_copy.to_csv(path_out, sep = ";",  encoding = "utf-8-sig")
         # so pra ver
 
         self.table = table_copy.copy()
