@@ -15,6 +15,35 @@ def read_yaml(path):
 
 class Excel_Transformer(object):
 
+    def __correct_values(self, data):
+        # multiplica todas as colunas no YAML que possuem valor R1000 por 1000
+        r1000_cols = [k for d in self.pattern for k, v in d.items() if v == "valueR1000"]
+        # Seleciona as colunas presentes no DataFrame
+        cols_to_multiply = [col for col in data.columns if any(re.fullmatch(rx, col) for rx in r1000_cols)]
+        # Multiplica por 1000
+        data[cols_to_multiply] = data[cols_to_multiply] * 1000
+        return data
+
+    def __correct_percentages(self, data, target):
+        percent_cols = [k for d in self.pattern for k, v in d.items() if v == "repeatpercent"]
+        cols_to_multiply = [col for col in data.columns if any(re.fullmatch(rx, col) for rx in percent_cols)]
+        print(cols_to_multiply)
+        for col in cols_to_multiply:
+            idxs = [i for i, c in enumerate(data.columns) if c == col]
+            for idx in idxs:
+                data.iloc[:, idx] = data.iloc[:, idx] * data[target]
+        return data
+
+
+    def __clean_column_names(self, data):
+        novas_colunas = []
+        for nome in data.columns:
+            texto_modificado = re.sub(r'(Cedente\s+\d+)\s+\(Vlr Presente-PDD\)', r'\1', nome)
+            texto_modificado = re.sub(r'(Sacado\s+\d+)\s+\(Vlr Presente-PDD\)', r'\1', texto_modificado)
+            novas_colunas.append(texto_modificado)
+        data.columns = novas_colunas
+        return data
+
     def __remove_rows_before(self, indexes, date_limit):
         date_limit = pd.to_datetime(date_limit)
 
@@ -58,19 +87,35 @@ class Excel_Transformer(object):
             "Janeiro": "January", "Fevereiro": "February", "Março": "March",
             "Abril": "April", "Maio": "May", "Junho": "June", "Julho": "July",
             "Agosto": "August", "Setembro": "September", "Outubro": "October",
-            "Novembro": "November", "Dezembro": "December"
+            "Novembro": "November", "Dezembro": "December",
+            "jan": "January", "fev": "February", "mar": "March",
+            "abr": "April", "mai": "May", "jun": "June", "jul": "July",
+            "ago": "August", "set": "September", "out": "October",
+            "nov": "November", "dez": "December"
         }
 
-        #TODO revisar oq acontece aqui, não lembro mais
-        arr_en = [
-            s.replace("-", " ").replace(month, month_list[month])
-            for raw in arr
-            for s in [re.sub(r"\s+", " ", str(raw).strip())] if isinstance(raw, str)
-            for month in month_list
-            if month in s
-        ]
+        arr_en = []
+        for raw in arr:
+            if isinstance(raw, (pd.Timestamp,)):
+                arr_en.append(raw)
+            elif isinstance(raw, str):
+                s = re.sub(r"\s+", " ", raw.strip()).replace("-", " ")
+                for month in month_list:
+                    if month in s:
+                        s = s.replace(month, month_list[month])
+                arr_en.append(s)
+            else:
+                arr_en.append(raw)
 
-        return pd.to_datetime(arr_en, format="%B %Y")
+        # Tenta primeiro com %B %Y, depois com %B %y para os que falharem
+        dates = pd.to_datetime(arr_en, format="%B %Y", errors='coerce')
+        mask_na = dates.isna()
+        if mask_na.any():
+            dates2 = pd.to_datetime(pd.Series(arr_en)[mask_na], format="%B %y", errors='coerce')
+            dates = pd.Series(dates)
+            dates[mask_na] = dates2
+
+        return dates
 
     def __check_name(self, name, patterns_fidcs):
         print(name)
@@ -122,7 +167,7 @@ class Excel_Transformer(object):
                         idx = data.columns.get_loc(col)
                         if isinstance(idx, (np.ndarray, list)):
 
-                            pos = np.where(idx)[0]# apagando pelo final
+                            pos = np.where(idx)[0] # apagando pelo final
                             data = data.iloc[:, [j for j in range(data.shape[1]) if j != pos[1]]]
 
                             #apagando sempre o segundo, mas pode ser o último
@@ -131,8 +176,15 @@ class Excel_Transformer(object):
                         else:
                             data = data.drop(col, axis=1)
                             print("⚠️ COLUNA2 PREVISTA MAS COM VALOR 'empty' REMOVIDA:", col)
+                    if value == "solarremove":
+                        idx = data.columns.get_loc(col)
+                        # tratamento de erro besta, por causa da merda do solar que tem 1 exceção e não quero mexer no q ta funcionando
+                        pos = np.where(idx)[0]  # apagando pelo começo
+                        data = data.iloc[:, [j for j in range(data.shape[1]) if j != pos[0]]]
+                        print("⚠️ COLUNA1 PREVISTA MAS COM VALOR 'empty' REMOVIDA:", col)
+
                     # Consome o item da lista expected_columns
-                    if value != 'repeat':
+                    if value != 'repeat' and value != 'repeatpercent':
                         del expected_columns[i]
                     break  # encontrou correspondência, não precisa verificar os demais
 
@@ -153,10 +205,13 @@ class Excel_Transformer(object):
         patterns_fidcs = read_yaml(PATH + 'FIDCs.yaml')
 
         if len(sheet_names) > 1:
+            print("OPAAAA")
             tables = []
             for sheet in sheet_names:
-                df = pd.read_excel(path, sheet_name=sheet)
+                df = pd.read_excel(path, sheet_name=sheet, header = None)
+                print(df)
                 df = df.T
+                print(df)
                 df.reset_index(drop=True, inplace=True)
                 tables.append(df)
             self.raw_table = pd.concat(tables, axis = 1)
@@ -211,6 +266,7 @@ class Excel_Transformer(object):
             table_copy.index = pd.Index(date) # talvez colocar name = "Data"
 
         elif self.type == "ORRAM":
+            print(table_copy)
             for i in range(table_copy.shape[1]):
                 if table_copy.iloc[0, i] == "Item":
                     indexes = table_copy.iloc[1:, i]  # pegando a coluna "itens"
