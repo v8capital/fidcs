@@ -37,6 +37,9 @@ local_settings.py
 # Arquivos de sistema do macOS
 .DS_Store
 
+# Arquivos .env
+.env
+
 # Pastas Indesejadas
 examples/
 out/

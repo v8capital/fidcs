@@ -1,5 +1,7 @@
-from testes.teste import SharePoint
+from classes.Extractor import Extractor
+from dotenv import load_dotenv
 
+import os
 
 def main():
     """excel = Excel_Transformer()
@@ -28,9 +30,30 @@ def main():
 
     #grp.group_FIDCs("2025-04-30")
 
-    extr = SharePoint()
+    load_dotenv()
 
-    extr.download_file("AURUM FIDC - Informação aos Investidores - Abril 2025.xlsx", "Aurum")
+    tenant_id = os.getenv("TENANT_ID")
+    client_id = os.getenv("CLIENT_ID")
+    client_secret = os.getenv("CLIENT_SECRET")
+    authority_url = os.getenv("AUTHORITY_URL")
+    site_domain = os.getenv("SITE_DOMAIN")
+    site_name = os.getenv("SITE_NAME")
+    site_id = os.getenv("SITE_ID")
+
+
+    extr = Extractor(
+        tenant_id=tenant_id,
+        client_id=client_id,
+        client_secret=client_secret,
+        authority_url=authority_url,
+        site_domain=site_domain,
+        site_name=site_name,
+        site_id=site_id
+    )
+
+    extr.download_file(
+        "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Abril/SOLAR/FIDC_SOLAR_2025_04_30.xlsx",
+       "FIDC_SOLAR_2025_04_30.xlsx", "./teste.xlsx")
 
     # to meio preocupado com a perca de info, mas acho q não vai acontecer
 
