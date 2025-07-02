@@ -40,4 +40,7 @@ local_settings.py
 # Pastas Indesejadas
 examples/
 out/
+v8_utilities/
+grouped_data/
+testes/
 

@@ -15,8 +15,6 @@ def read_yaml(path):
 
     return dados  # Retorna como dicionário: {coluna_final: [possibilidades]}
 
-
-
 class Grouper(object):
 
     def __init__(self):
@@ -272,35 +270,37 @@ class Grouper(object):
 
         self.csv_dict = csv_dict
 
-    def result(self):
+    def group_FIDCs(self, date):
         #todo:
-            # coisa rapidas, organizar esse result, e ajeitar os nomes
             # ajeitar as funções que utilizam o self.csv_dict, porque eu to retornando
             # e algumas funções dependentes utilizam ele mas pode dar erro se eu não atualizar
             # calcular os dados que eles pediram
 
+        column_names_1_dict = self.__selecting_columns_by_name()
+        column_names_2_dict = self.__selecting_columns_by_regex() # {"ALFA": ["Coluna1", "Coluna2", ...], ...}
 
-        list1 = self.__selecting_columns_by_name()
-        list2 = self.__selecting_columns_by_regex()
-
-        resultado = {k: list1.get(k, []) + list2.get(k, []) for k in list1.keys()}
-
-        print(resultado)
+        column_names = {k: column_names_1_dict.get(k, []) + column_names_2_dict.get(k, [])
+                     for k in column_names_1_dict.keys()}
 
         # depois mudar pq é ideal nem tudo tá usando o self.csv_dict
 
-        self.csv_dict = self.__selecting_final_columns(resultado)
+        self.csv_dict = self.__selecting_final_columns(column_names) # mantendo apenas as colunas de interesse
         self.csv_dict = self.__days_to_end_of_month()
-        final_final = self.__group_by_date("2025-04-30")
+        grouped_data = self.__group_by_date(date)
 
-        lista_unica = pd.Series(chain.from_iterable(list2.values()))
+        column_names_2_list = pd.Series(chain.from_iterable(column_names_2_dict.values()))
+        column_names_2_list = list(column_names_2_list.drop_duplicates())
+        main_columns = list(self.equiv_columns.keys())
 
-        testeee = list(lista_unica.drop_duplicates())
+        final_order = self.__reorder_df_columns(main_columns, column_names_2_list)
 
-        lista = list(self.equiv_columns.keys())
+        print(grouped_data.info())
+        grouped_data = grouped_data[final_order]
+        grouped_data.index.name = "FIDC"
 
-        ordem_final = self.__reorder_df_columns(lista, testeee)
+        name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
+        PATH_OUT = "./grouped_data/" # TTIRAR ISSO DEPOIS
 
-        print(final_final[ordem_final])
+        grouped_data.to_csv(PATH_OUT + name, sep=';', encoding='utf-8-sig')
 
 

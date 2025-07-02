@@ -62,7 +62,13 @@
         - '(?i)\s*Colaboradores\s*': 'value'
   - 'FUNDS':
       - 'ARTICO'
-      - ''
+      - 'CONFIANCA'
+      - 'AUDAX'
+      - 'FATTOR'
+      - 'IOX'
+      - 'MATRIZ'
+      - 'NOVA_CAPITAL'
+      - 'STARS'
 
 'M8':
   - 'COLUMNS':
@@ -136,7 +142,9 @@
         - '(?i)\s*Sacado\s*(?:[1-9]|10)\s*': 'repeat'
   - 'FUNDS':
     - 'PHD'
-    -  ''
+    - 'AURUM'
+    - 'GAVEA_OPEN'
+    - 'SIGMA'
 
 'ORRAM':
   - 'COLUMNS':
@@ -211,6 +219,8 @@
       - '(?i)\s*Maior\s+Sacado\s*-\s*S/PL\s*': 'percent'
   - 'FUNDS':
     - 'PAGOL'
+    - 'SIFRA_PLUS'
+    - 'SIFRA_STAR'
 'PATTERN1':
   - 'COLUMNS':
       - '(?i)\s*PL\s+Total\s*': 'value'
@@ -261,6 +271,8 @@
       - '(?i)\s*Remunera[cç][ãa]o\s+consultoria\s*': 'value'
   - 'FUNDS':
     - 'ALFA'
+    - 'ONIX'
+    - 'RAIZES'
 'BARCELONA':
   - 'COLUMNS':
       - '(?i)\s*PL\s+Total\s*': 'value'
@@ -390,7 +402,6 @@
       - '(?i)\s*10\s+Maiores\s+Sacados\s*\(R\$?\)\s*': 'value'
       - '(?i)\s*Sacado\s*(?:[1-9]|10)\s*': 'repeat'
       - '(?i)\s*Maior\s+Sacado\s+-\s*S/PL\s*': 'percent'
-
 
 'MULTIPLIKE':
   - 'COLUMNS':

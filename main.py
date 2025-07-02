@@ -1,7 +1,5 @@
-import pandas as pd
-from classes.FIDC import FIDC
-from classes.Excel_Transformer import Excel_Transformer
-from classes.Grouper import Grouper
+from testes.teste import SharePoint
+
 
 def main():
     """excel = Excel_Transformer()
@@ -24,11 +22,17 @@ def main():
         excel.transform_table()"""
 
 
-    grp = Grouper()
+    #grp = Grouper()
 
-    grp.read_csvs("./out/")
+    #grp.read_csvs("./out/")
 
-    grp.result()
+    #grp.group_FIDCs("2025-04-30")
+
+    extr = SharePoint()
+
+    extr.download_file("AURUM FIDC - Informação aos Investidores - Abril 2025.xlsx", "Aurum")
+
+    # to meio preocupado com a perca de info, mas acho q não vai acontecer
 
     # TODO AJEITAR O VALOR NEGATIVO DO PDD DA SOLAR, fazer depois
     print()
