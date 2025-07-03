@@ -41,6 +41,9 @@ local_settings.py
 # Arquivos .env
 .env
 
+# Arquivos excel
+*.xlsx
+
 # Pastas Indesejadas
 examples/
 out/
