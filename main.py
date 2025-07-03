@@ -1,4 +1,4 @@
-from v8_utilities.sharepoint import SharePoint
+from classes.extractor import Extractor
 from classes.exceltransformer import ExcelTransformer
 from classes.grouper import Grouper
 from dotenv import load_dotenv
@@ -6,36 +6,10 @@ from dotenv import load_dotenv
 import os
 
 def main():
-    """excel = Excel_Transformer()
-
-    arquivos = [
-        ("./examples/Relatório - FIDC PAGOL - 2025.04.xlsx", "PAGOL"),
-        ("./examples/M8 Asset_PHD FIDC_Informação aos Investidores_Abril 2025.xlsx", "PHD"),
-        ("./examples/ÁRTICO FIDC - Histórico de Performance_Até_maio_2025.xlsx", "ARTICO"),
-        ("./examples/ALFA FIDC - Dados Basicos - Informações de Investimentos - Abril2025.xlsx", "ALFA"),
-        ("./examples/Dados Básicos - Análise Investimento - Barcelona.xlsx", "BARCELONA"),
-        ("./examples/Modelo MultiAsset - Acompanhamento Resultados Fundo_v8.xlsx", "MULTIASSET"),
-        ("./examples/Dados - Análise Investimento MULTIPLIKE FIDC ABRIL 2025.xlsx", "MULTIPLIKE"),
-        ("./examples/Monitoramento FIDC Multissetorial ONE7 LP - Abr 2025.xlsx", "ONE7"),
-        ("./examples/2025.04 Acompanhamento - FIDC Appaloosa (1).xlsx", "APPALOOSA"),
-        ("./examples/Monitoramento_Solar_202504.xlsx", "SOLAR"),
-    ]
-
-    for path, sheet in arquivos:
-        excel.read_excel(path, sheet)
-        excel.transform_table()"""
-
-
-    #grp = Grouper()
-
-    #grp.read_csvs("./out/")
-
-    #grp.group_FIDCs("2025-04-30")
-
-    """
-
+    # Carrega as variáveis de ambiente do arquivo .env
     load_dotenv()
 
+    # Configurações do SharePoint
     tenant_id = os.getenv("TENANT_ID")
     client_id = os.getenv("CLIENT_ID")
     client_secret = os.getenv("CLIENT_SECRET")
@@ -44,49 +18,20 @@ def main():
     site_name = os.getenv("SITE_NAME")
     site_id = os.getenv("SITE_ID")
 
+    # Cria a instância do SharePoint
+    extrator = Extractor(tenant_id, client_id, client_secret, authority_url, site_domain, site_name, site_id)
 
-    extr = SharePoint(
-        tenant_id=tenant_id,
-        client_id=client_id,
-        client_secret=client_secret,
-        authority_url=authority_url,
-        site_domain=site_domain,
-        site_name=site_name,
-        site_id=site_id
-    )
+    # Extrai o arquivo FIDC
+    path_sharepoint = "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Abril"
+    fidcs_files = extrator.list_files(path_sharepoint)
 
-    extr.download_file(
-        "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Abril/SOLAR/FIDC_SOLAR_2025_04_30.xlsx",
-       "FIDC_SOLAR_2025_04_30.xlsx", "./teste.xlsx")
-       
-    """
+    path_download = "./examples"
 
-    arquivos = [
-        ("./examples/Relatório - FIDC PAGOL - 2025.04.xlsx", "PAGOL"),
-        ("./examples/M8 Asset_PHD FIDC_Informação aos Investidores_Abril 2025.xlsx", "PHD"),
-        ("./examples/ÁRTICO FIDC - Histórico de Performance_Até_maio_2025.xlsx", "ARTICO"),
-        ("./examples/ALFA FIDC - Dados Basicos - Informações de Investimentos - Abril2025.xlsx", "ALFA"),
-        ("./examples/Dados Básicos - Análise Investimento - Barcelona.xlsx", "BARCELONA"),
-        ("./examples/Modelo MultiAsset - Acompanhamento Resultados Fundo_v8.xlsx", "MULTIASSET"),
-        ("./examples/Dados - Análise Investimento MULTIPLIKE FIDC ABRIL 2025.xlsx", "MULTIPLIKE"),
-        ("./examples/Monitoramento FIDC Multissetorial ONE7 LP - Abr 2025.xlsx", "ONE7"),
-        ("./examples/2025.04 Acompanhamento - FIDC Appaloosa (1).xlsx", "APPALOOSA"),
-        ("./examples/Monitoramento_Solar_202504.xlsx", "SOLAR"),
-    ]
-
-    for path, sheet in arquivos:
-        excel = ExcelTransformer(path, sheet)
-        excel.transform_table()
-
-    grp = Grouper()
-
-    grp.read_csvs("./out/")
-
-    grp.group_fidcs("2025-04-30")
-    # to meio preocupado com a perca de info, mas acho q não vai acontecer
-
-    # TODO AJEITAR O VALOR NEGATIVO DO PDD DA SOLAR, fazer depois
-    print()
+    for fidc in fidcs_files:
+        name_ = "FIDC_" + fidc + "_2025_04_30.xlsx" # TEM QUE VER A QUESTÃO DA DATA DEPOIS
+        path_ = path_sharepoint + "/" + fidc + "/" + name_
+        extrator.download_file(path_, name_, "./examples/" + name_)
+    #fidc_path = extrator.extract_fidcs(path="", fidcs_list=["FIDC1", "FIDC2"])
 
 
 if __name__ == "__main__":

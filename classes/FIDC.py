@@ -28,9 +28,6 @@ class FIDC():
         self.type = type
         self.pattern = pattern
 
-        # todo ajeitar o self.pattern
-
-
     def convert_to_double(self, data):
         # Define valores a substituir por NaN
         invalid_entries = ["-", " ", ""]  # você pode adicionar outros se necessário
