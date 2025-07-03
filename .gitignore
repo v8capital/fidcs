@@ -22,7 +22,8 @@ venv.bak/
 .idea/
 idea/
 
-# Arquivos de log
+# Arquivos e Pasta de log
+logs/
 *.log
 
 # Arquivos de banco de dados

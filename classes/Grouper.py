@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 
+from typing import Dict, List
 from itertools import chain
+from v8_utilities.logv8 import LogV8
 
 import yaml
 import re
@@ -15,13 +17,24 @@ def read_yaml(path):
 
     return dados  # Retorna como dicionário: {coluna_final: [possibilidades]}
 
+logger = LogV8()
+
+#ajeitar tudo aqui
+
 class Grouper(object):
-
     def __init__(self):
-        self.equiv_columns = read_yaml(PATH + "/colunas.YAML")
+        self.equiv_columns =  read_yaml(PATH + "/colunas.YAML")
         self.regex_patterns = read_yaml(PATH + "/regex.YAML")
+        self.csv_dict: Dict[str, pd.DataFrame] = {}
 
-    def __days_string_processing(self, entry):
+    # ------------------------  PROCESSAMENTO DE STRINGS  ------------------------ #
+    @staticmethod
+    def _verify_pattern(entry: str, patterns: List[str]) -> bool:
+        text = str(entry).lower().strip()
+        return any(re.search(p, text) for p in patterns)
+
+    def _days_string_processing(self, entry: str | None) -> str | None:
+
         if not entry or not isinstance(entry, str):
             return None
 
@@ -44,17 +57,12 @@ class Grouper(object):
         ]
 
         for pattern, format in change_pattern:
-            match = re.fullmatch(pattern, entry)
-            if match:
+            if match := re.fullmatch(pattern, entry):
                 return format(match)
         return None
 
-    def __verify_pattern(self, entry, pattern):
-        text = str(entry).lower().strip()
-        return any(re.search(p, text) for p in pattern)
-
-
-    def __days_column_processing(self, df):
+    # ------------------------  DATAFRAME MANIPULAÇÃO  ------------------------ #
+    def _days_column_processing(self, df: pd.DataFrame) -> pd.DataFrame:
         columns = pd.Series(df.columns)
 
         pattern = [
@@ -71,27 +79,25 @@ class Grouper(object):
             r"^até\s+\d+\s*dias$"
         ]
 
-        columns_in_the_pattern = columns.apply(lambda entry: self.__verify_pattern(entry, pattern))
-        columns_processed = columns[columns_in_the_pattern]
+        mask = columns.apply(lambda entry: self._verify_pattern(entry, pattern))
+        columns_processed = columns[mask]
 
-        result = columns_processed.apply(lambda entry: self.__days_string_processing(entry))
-
-        columns[columns_in_the_pattern] = result
-
+        columns[mask] = columns_processed.apply(self._days_string_processing)
         df.columns = columns
-
         return df
 
-    def __rename_equiv_columns(self, df):
+    def _rename_equiv_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         rename_dict = {}
         for wanted_name, possibilities in self.equiv_columns.items():
+
             if possibilities is None: continue
+
             for possibility in possibilities:
                 if possibility in df.columns:
                     rename_dict[possibility] = wanted_name
         return df.rename(columns=rename_dict)
 
-    def __grouping_days_column(self, df):
+    def _grouping_days_column(self, df: pd.DataFrame) -> pd.DataFrame:
 
         # agrupa as colunas de dias pelo qual coluna ela se refere
 
@@ -102,12 +108,14 @@ class Grouper(object):
         ]
 
         columns = pd.Series(df.columns)
-        result = columns.apply(lambda entry: self.__verify_pattern(entry, pattern))  # vetor booleano, ex: [True, False, False, ...]
+        indicator = columns.apply(lambda entry: self._verify_pattern(entry, pattern))
+        # vetor booleano, ex: [True, False, False, ...]
+
         last_true_idx = None
         new_columns = []
 
         for idx, col_name in enumerate(columns):
-            if not result.iloc[idx]:
+            if not indicator.iloc[idx]:
                 new_columns.append(col_name)
                 last_true_idx = idx
             else:
@@ -119,47 +127,38 @@ class Grouper(object):
         df.columns = new_columns
         return df
 
-    def __selecting_columns_by_name(self):
+    # ------------------------  SELEÇÃO DE COLUNAS  ------------------------ #
+    def _selecting_columns_by_name(self) -> Dict[str, List[str]]:
         # Usa apenas as chaves como nomes exatos de colunas a buscar
         wanted_columns = list(self.equiv_columns.keys())
 
         result = {}
 
-        for name_df, df in self.csv_dict.items():
-            found_columns = []
-            for col in df.columns:
-                if col in wanted_columns:
-                    found_columns.append(col)
-            result[name_df] = found_columns
+        result = {n: [c for c in df.columns if c in wanted_columns] for n, df in self.csv_dict.items()}
+
+        #for name_df, df in self.csv_dict.items():
+        #    found_columns = []
+        #    for col in df.columns:
+        #        if col in wanted_columns:
+        #            found_columns.append(col)
+        #    result[name_df] = found_columns
 
         return result
 
-    def __selecting_columns_by_regex(self):
-        wanted_columns = list(self.regex_patterns.values())[0]
+    def _selecting_columns_by_regex(self) -> Dict[str, List[str]]:
+        regex_list = list(self.regex_patterns.values())[0]
+        compiled = [re.compile(p) for p in regex_list]
 
-        compiled_patterns = [re.compile(p) for p in wanted_columns]
+        out: Dict[str, List[str]] = {}
+        for name, df in self.csv_dict.items():
+            matches = [c for c in df.columns if any(p.fullmatch(str(c)) for p in compiled)]
+            out[name] = matches
+        return out
 
-        result = {}
+    def _filter_final_columns(self, columns: Dict[str, List[str]]) -> None:
+        self.csv_dict = {k: df[columns[k]] for k, df in self.csv_dict.items()}
 
-        for name_df, df in self.csv_dict.items():
-            found_columns = []
-            for col in df.columns:
-                for pattern in compiled_patterns:
-                    if pattern.fullmatch(str(col)):
-                        found_columns.append(col)
-                        break
-            result[name_df] = found_columns
-
-        return result
-
-    def __selecting_final_columns(self, columns):
-        data = {}
-        #print(columns)
-        for key in self.csv_dict.keys():
-            data[key] = self.csv_dict[key][columns[key]]
-        return data
-
-    def __group_by_date(self, date):
+    def _group_by_date(self, date: str | pd.Timestamp) -> pd.DataFrame:
         list_dates = []
 
         for key, df in self.csv_dict.items():
@@ -173,8 +172,9 @@ class Grouper(object):
         result = pd.concat(list_dates, axis = 0, sort = True)
         return result
 
-    def __days_to_end_of_month(self):
-        csv_dict_ = {}
+    # ------------------------  AGRUPAMENTOS AUXILIARES  ------------------------ #
+    def _days_to_end_of_month(self) -> None:
+        csv_dict = {}
 
         for key, df in self.csv_dict.items():
             df = df.copy()
@@ -182,11 +182,12 @@ class Grouper(object):
             df = df[~df.index.isna()]
             df.index = df.index.to_period('M').to_timestamp('M')
             df = df.groupby(df.index).first()
-            csv_dict_[key] = df
+            csv_dict[key] = df
 
-        return csv_dict_
+        self.csv_dict = csv_dict
 
-    def __extract_order(self, item):
+    # ------------------------  ORDENADOR DE COLUNAS  ------------------------ #
+    def _extract_order(self, item: str):
         match = re.match(r'^\((.*?)\)\s*(>?=?\s*\d+)(?:\s*-\s*(\d+))?', item)
         if match:
             group = match.group(1)
@@ -196,54 +197,53 @@ class Grouper(object):
             start = int(re.sub(r'\D', '', start_raw)) if start_raw else 0
             end = int(end_raw) if end_raw else (start if '>' not in start_raw else 9999)
 
-            return (group, start, end)
+            return group, start, end
         else:
-            return ('ZZZ', 99999, 99999)
+            return 'ZZZ', 99999, 99999
 
-    def __reorder_df_columns(self, wanted_columns_names, data):
+    def _reorder_df_columns(self, required_cols: List[str], regex_cols: List[str])-> List[str]:
         # Ordena colunas do tipo (Grupo)X-Y dias
-        ordered_list = sorted(data, key= self.__extract_order)
-        result = wanted_columns_names + ordered_list
+        ordered_rgx_cols = sorted(regex_cols, key= self._extract_order)
+        ordered_cols = required_cols + ordered_rgx_cols
 
         # Regras de reorganização
-        if 'Concentração Top 10 Cedentes (R$)' in result and 'Cedente 1' in result:
-            result.remove('Concentração Top 10 Cedentes (R$)')
-            idx = result.index('Cedente 1')
-            result.insert(idx, 'Concentração Top 10 Cedentes (R$)')
+        if 'Concentração Top 10 Cedentes (R$)' in ordered_cols and 'Cedente 1' in ordered_cols:
+            ordered_cols.remove('Concentração Top 10 Cedentes (R$)')
+            idx = ordered_cols.index('Cedente 1')
+            ordered_cols.insert(idx, 'Concentração Top 10 Cedentes (R$)')
 
-        if 'Concentração Top 10 Sacados (R$)' in result and 'Sacado 1' in result:
-            result.remove('Concentração Top 10 Sacados (R$)')
-            idx = result.index('Sacado 1')
-            result.insert(idx, 'Concentração Top 10 Sacados (R$)')
+        if 'Concentração Top 10 Sacados (R$)' in ordered_cols and 'Sacado 1' in ordered_cols:
+            ordered_cols.remove('Concentração Top 10 Sacados (R$)')
+            idx = ordered_cols.index('Sacado 1')
+            ordered_cols.insert(idx, 'Concentração Top 10 Sacados (R$)')
 
         group_pattern = re.compile(r'^\(([^)]+)\)\s*[\d>]')
         groups = {}
-        for i, col in enumerate(result):
+        for i, col in enumerate(ordered_cols):
             match = group_pattern.match(col)
             if match:
                 group = match.group(1)
-                if group not in groups and group in result:
+                if group not in groups and group in ordered_cols:
                     groups[group] = i
 
         for group, idx_ref in groups.items():
-            if group in result:
-                result.remove(group)
-                result.insert(idx_ref - 1, group)
+            if group in ordered_cols:
+                ordered_cols.remove(group)
+                ordered_cols.insert(idx_ref - 1, group)
 
         # Mover 'PDD À Vencer' após último '(PDD Total)X-Y dias'
-        if 'PDD À Vencer' in result:
+        if 'PDD À Vencer' in ordered_cols:
             padrao_pdd = re.compile(r'^\(PDD Total\)\s*\d+\s*-\s*\d+\s*dias')
-            indices_pdd = [i for i, col in enumerate(result) if padrao_pdd.match(col)]
+            indices_pdd = [i for i, col in enumerate(ordered_cols) if padrao_pdd.match(col)]
             if indices_pdd:
                 idx_destino = max(indices_pdd)
-                result.remove('PDD À Vencer')
-                result.insert(idx_destino, 'PDD À Vencer')
+                ordered_cols.remove('PDD À Vencer')
+                ordered_cols.insert(idx_destino, 'PDD À Vencer')
 
-        return result
+        return ordered_cols
 
     def read_csvs(self, path):
         # por enquanto eu vou ler todos os csvs de uma pasta X
-
         csv_dict = {}
 
         def remove_suffix(columns):
@@ -261,46 +261,43 @@ class Grouper(object):
                 name_file = os.path.splitext(file)[0]  # Remove a extensão
                 df = pd.read_csv(path_file, sep=';', encoding='utf-8-sig', index_col="Data", ).astype("float64")
                 # ajuste encoding se necessário
-                print(name_file)
+                logger.info(f"FIDC {name_file} encontrado para agrupamento.")
                 df.columns = remove_suffix(df.columns)
-                df = self.__days_column_processing(df)
-                df = self.__rename_equiv_columns(df)
-                df = self.__grouping_days_column(df)
+                df = self._days_column_processing(df)
+                df = self._rename_equiv_columns(df)
+                df = self._grouping_days_column(df)
                 csv_dict[name_file] = df
-
         self.csv_dict = csv_dict
 
-    def group_FIDCs(self, date):
-        #todo:
-            # ajeitar as funções que utilizam o self.csv_dict, porque eu to retornando
-            # e algumas funções dependentes utilizam ele mas pode dar erro se eu não atualizar
-            # calcular os dados que eles pediram
+    # -------------------  CALCULO DAS MÉTRICAS PEDIDAS  ------------------ #
+    # TO DO
 
-        column_names_1_dict = self.__selecting_columns_by_name()
-        column_names_2_dict = self.__selecting_columns_by_regex() # {"ALFA": ["Coluna1", "Coluna2", ...], ...}
+    # ------------------------  AGRUPAMENTO FINAL  ------------------------ #
 
-        column_names = {k: column_names_1_dict.get(k, []) + column_names_2_dict.get(k, [])
-                     for k in column_names_1_dict.keys()}
+    def group_fidcs(self, date: str | pd.Timestamp) -> pd.DataFrame:
 
-        # depois mudar pq é ideal nem tudo tá usando o self.csv_dict
+        logger.info(f"Iniciando agrupamento dos FIDCs para a data: {date}")
 
-        self.csv_dict = self.__selecting_final_columns(column_names) # mantendo apenas as colunas de interesse
-        self.csv_dict = self.__days_to_end_of_month()
-        grouped_data = self.__group_by_date(date)
+        by_name = self._selecting_columns_by_name()
+        by_regex = self._selecting_columns_by_regex() # {"ALFA": ["Coluna1", "Coluna2", ...], ...}
 
-        column_names_2_list = pd.Series(chain.from_iterable(column_names_2_dict.values()))
-        column_names_2_list = list(column_names_2_list.drop_duplicates())
-        main_columns = list(self.equiv_columns.keys())
+        column_names = {k: by_name.get(k, []) + by_regex.get(k, [])
+                        for k in by_name.keys()}
 
-        final_order = self.__reorder_df_columns(main_columns, column_names_2_list)
+        self._filter_final_columns(column_names) # mantendo apenas as colunas de interesse
+        self._days_to_end_of_month()
 
-        print(grouped_data.info())
-        grouped_data = grouped_data[final_order]
-        grouped_data.index.name = "FIDC"
+        grouped_data = self._group_by_date(date)
+
+        regex_cols      = list(pd.Series(chain.from_iterable(by_regex.values())).drop_duplicates())
+        main_columns    = list(self.equiv_columns.keys())
+        ordered         = self._reorder_df_columns(main_columns, regex_cols)
+        grouped_data    = grouped_data[ordered]
+        grouped_data.index.name = 'FIDC'
 
         name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
-        PATH_OUT = "./grouped_data/" # TTIRAR ISSO DEPOIS
+        path_out = "./grouped_data/" + name
+        grouped_data.to_csv(path_out , sep=';', encoding='utf-8-sig')
+        logger.info(f"Agrupamento feito com Sucesso. Arquivo salvo em {path_out}")
 
-        grouped_data.to_csv(PATH_OUT + name, sep=';', encoding='utf-8-sig')
-
-
+        return grouped_data
