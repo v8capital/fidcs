@@ -169,22 +169,19 @@ class Grouper(object):
                 row_df = pd.DataFrame([{col: pd.NA for col in df.columns}], index=[key])
             list_dates.append(row_df)
 
-        result = pd.concat(list_dates, axis = 0, sort = True)
+        frames = [
+            f.dropna(axis=1, how="all")  # strip all‑NA columns first
+            for f in list_dates
+            if not f.dropna(how="all").empty  # skip if nothing left
+        ]
+        frames = [
+            f.dropna(axis=1, how="all")  # strip all‑NA columns first
+            for f in list_dates
+            if not f.dropna(how="all").empty  # skip if nothing left
+        ]
+
+        result = pd.concat(frames, axis=0, sort=True)
         return result
-
-    # ------------------------  AGRUPAMENTOS AUXILIARES  ------------------------ #
-    def _days_to_end_of_month(self) -> None:
-        csv_dict = {}
-
-        for key, df in self.csv_dict.items():
-            df = df.copy()
-            df.index = pd.to_datetime(df.index, errors='coerce')
-            df = df[~df.index.isna()]
-            df.index = df.index.to_period('M').to_timestamp('M')
-            df = df.groupby(df.index).first()
-            csv_dict[key] = df
-
-        self.csv_dict = csv_dict
 
     # ------------------------  ORDENADOR DE COLUNAS  ------------------------ #
     def _extract_order(self, item: str):
@@ -285,7 +282,6 @@ class Grouper(object):
                         for k in by_name.keys()}
 
         self._filter_final_columns(column_names) # mantendo apenas as colunas de interesse
-        self._days_to_end_of_month()
 
         grouped_data = self._group_by_date(date)
 

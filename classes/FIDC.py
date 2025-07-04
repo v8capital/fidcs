@@ -28,28 +28,71 @@ class FIDC():
         self.type = type
         self.pattern = pattern
 
-    def convert_to_double(self, data):
-        # Define valores a substituir por NaN
-        invalid_entries = ["-", " ", ""]  # você pode adicionar outros se necessário
+        self._ptbr_num = re.compile(
+            r'''^          # start
+                                -?         # optional sign
+                                \d{1,3}    # first group of up to 3 digits
+                                (?:\.\d{3})*  # zero or more “.###” thousands groups
+                                (?:,\d+)?     # optional “,##” decimal part
+                                $          # end
+                            ''',
+            re.VERBOSE,
+        )
+
+    def _str_ptbr_to_float(self, s: str) -> float:
+        """
+        Convert '322.850,74' → 322850.74 (and similar) safely.
+        Assumes `s` already matches `_ptbr_num`.
+        """
+
+
+        logger.debug(f"Número em PTBR encontrado e sendo convertido: '{s}'")
+
+        return float(s.replace('.', '').replace(',', '.'))
+
+    def convert_to_double(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Sanitise DataFrame and return it as float64 (“double”)."""
+
+        # 1. Replace obvious “empty” entries with NaN
+        data = data.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+        invalid_entries = ["-", " ", ""]
         data = data.replace(invalid_entries, np.nan).infer_objects(copy=False)
 
-        # Verifica e printa valores inválidos que viraram NaN por não serem numéricos
+        # 2. Row‑wise cleanup
         for col in data.columns:
             for idx, val in data[col].items():
-                # Ignora valores não escalares
-                if not pd.api.types.is_scalar(val):
+                # Ignore non‑scalar or already‑NaN values early
+                if not pd.api.types.is_scalar(val) or pd.isna(val):
                     continue
-                # Se for NaN, continue
-                if pd.isna(val):
-                    continue
+
+                # Handle Brazilian/Portuguese formatted numbers
+                if isinstance(val, str) and self._ptbr_num.match(val):
+                    try:
+                        data.at[idx, col] = self._str_ptbr_to_float(val)
+                        continue  # done with this cell
+                    except Exception:
+                        pass  # fall through to generic handler
+
+                # Generic numeric test
                 try:
                     float(val)
                 except Exception:
-                    logger.debug(f"Valor inválido convertido para NaN: '{val}' | Coluna: '{col}' | Linha: {idx}")
+                    logger.debug(
+                        f"Valor inválido convertido para NaN: '{val}' | "
+                        f"Coluna: '{col}' | Linha: {idx}"
+                    )
                     data.at[idx, col] = np.nan
 
-        # Converte o restante para float (double)
+        # 3. Final conversion to float64 (“double”)
         return data.astype("double")
+
+    def absolute_values(self, data):
+        # multiplica todas as colunas no YAML que possuem valor absolute por -1
+        absolute_cols = [k for d in self.pattern for k, v in d.items() if v == "absolute"]
+        cols_to_multiply = [col for col in data.columns if any(re.fullmatch(rx, col) for rx in absolute_cols)]
+        data[cols_to_multiply] = data[cols_to_multiply] * -1000 # pq o PDD tá em milhares
+        return data
 
     def correct_values(self, data):
         # multiplica todas as colunas no YAML que possuem valor R1000 por 1000
@@ -103,12 +146,22 @@ class FIDC():
             [val for val in data.columns if any(re.fullmatch(rx, val) for rx in padroes)]
             for padroes in (assets, dc)
         ]
-
         #print(assets)
-
         #print(dc)
         data[assets] = data[assets].multiply(data[dc[0]], axis = 0)
         return data
+
+    def _days_to_end_of_month(self, data) -> None:
+        # converter pro mesmo tipo, um tá datetime e outro timestamp talvez esteja dando problema
+
+        df = data.copy()
+        df.index = pd.to_datetime(df.index, errors='coerce')
+        df = df[~df.index.isna()]
+
+        df.index = pd.to_datetime(df.index.to_period('M').to_timestamp('M'))
+        df = df.groupby(df.index).first()
+
+        return df
 
     def create_total_liquid(self, data):
         liquid_days_p = list({k for d in self.pattern for k, v in d.items() if v == "liquids"})

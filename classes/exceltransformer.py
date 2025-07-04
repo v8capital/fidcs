@@ -23,6 +23,8 @@ def read_yaml(path):
 
 logger = LogFIDC()
 
+# tem que ver talvez mudar do _init_ pro transform, aí crio o transform uma vez e faço o resto
+
 class ExcelTransformer(object):
 
     def __init__(self, path, name):
@@ -45,7 +47,7 @@ class ExcelTransformer(object):
             raw_table = pd.read_excel(path)
             table = raw_table.T
         #self.table.to_csv("./out/raw_" + name + ".csv", sep = ";",  encoding = "utf-8-sig")
-        type, pattern = self.__check_name(name, patterns_fidcs)
+        type, pattern = self._check_name(name, patterns_fidcs)
 
         self.fidc = FIDC(table = table, raw_table = raw_table, name = name, type = type, pattern = pattern)
         logger.info(f"FIDC {self.fidc.name} da Gestora {self.fidc.type} carregado com sucesso.")
@@ -55,21 +57,34 @@ class ExcelTransformer(object):
     # --------------------------------------------------------------------- #
     def _extract_indexes_and_prepare(self, tbl, item_label="Item"):
         """Pull the index column, promote first row to header, drop original header row."""
-        for i in range(tbl.shape[1]):
-            if tbl.iloc[0, i] == item_label:
-                idx = tbl.iloc[1:, i]  # values below header row
+        found = False
+        m = 0
+        for i in range(tbl.shape[0]):
+            for j in range(tbl.shape[1]):
+                if tbl.iloc[i, j] == item_label:
+                    idx = tbl.iloc[i + 1:, j]  # values below header row
+                    m = i
+                    found = True
+                    break  # interrompe o loop interno
+            if found:
                 break
-        tbl.columns = tbl.iloc[0, :].infer_objects()
-        tbl = tbl.drop(tbl.index[0])
+
+        tbl.columns = tbl.iloc[m, :].infer_objects()
+        tbl = tbl.drop(tbl.index[:m + 1])
+
         return tbl, idx
 
-    def _standardize(self, tbl, idx, *, subset = "Item", drop_item=True, do_check=True, reset_index = True):
+    def _standardize(self, tbl, idx, *, subset = "Item", drop_item=True, do_check=True, reset_index = True, multi_item = False):
         """Optional Item‑column NA cleanup, generic column checks, re‑index reset."""
         if drop_item:
+            if multi_item:
+                # Mantém apenas a primeira ocorrência da coluna específica
+                mask = ~((tbl.columns == subset) & tbl.columns.duplicated(keep='first'))
+                tbl = tbl.loc[:, mask]
             tbl = tbl.dropna(subset=[subset])
             idx = idx.dropna()
         if do_check:  # <- NEW FLAG
-            tbl = self.__check_columns(tbl)
+            tbl = self._check_columns(tbl)
         if reset_index:
             tbl.reset_index(drop=True, inplace=True)
         return tbl, idx
@@ -84,7 +99,7 @@ class ExcelTransformer(object):
     # --------------------------------------------------------------------- #
     # YAML & COLUMN CHECKERS
     # --------------------------------------------------------------------- #
-    def __check_name(self, name, patterns_fidcs):
+    def _check_name(self, name, patterns_fidcs):
         for manager_name, items in patterns_fidcs.items():
             itemskeys = set(key for d in items for key in d.keys())
             if 'FUNDS' in itemskeys:
@@ -103,7 +118,7 @@ class ExcelTransformer(object):
         raise Exception("Nome não encontrado no YAML de padrões de FIDCs.")
 
 
-    def __check_columns(self, data):
+    def _check_columns(self, data):
         # acredito que isso será padrão para todos
         expected_columns = self.fidc.pattern.copy()
         data.columns = data.columns.astype(str)
@@ -178,6 +193,8 @@ class ExcelTransformer(object):
 
         # -------- TERCON -------------------------------------------------- #
         if fidc_type == "TERCON":
+            if table_copy.index.equals(pd.RangeIndex(len(table_copy))):
+                table_copy.index = table_copy.iloc[:, 0] # se não tiver index, vamos usar a primeira coluna como index
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, _ = self._standardize(table_copy, indexes, drop_item=False, reset_index=False)
             table_copy = table_copy[
@@ -193,13 +210,28 @@ class ExcelTransformer(object):
 
         # -------- ORRAM --------------------------------------------------- #
         elif fidc_type == "ORRAM":
-            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
-            table_copy, indexes = self._standardize(table_copy, indexes)
-            table_copy = self.fidc.correct_assets(table_copy)
-            table_copy.index = indexes
+            def _prep_sheet(sheet):
+                sheet, idx = self._extract_indexes_and_prepare(sheet, "Item")
+                sheet, _ = self._standardize(sheet, idx, do_check=False)  # <- skip check here
+                return sheet
 
-        # -------- PATTERN1 ------------------------------------------------ #
-        elif fidc_type == "PATTERN1":
+            processed = [
+                _prep_sheet(s.dropna(how="all"))  # ignore empty sheets
+                for s in self.fidc.raw_table
+            ]
+
+            table_copy = reduce(
+                lambda l, r: pd.merge(l, r, on="Item", how="inner"),
+                processed,
+            )
+            indexes = table_copy["Item"]
+            table_copy = self._check_columns(table_copy)
+
+            table_copy = self.fidc.correct_assets(table_copy)
+            self._set_index(table_copy, indexes)
+
+        # ----------- ALFA ------------------------------------------------ #
+        elif fidc_type == "ALFA":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes)
             self._set_index(table_copy, indexes)
@@ -231,7 +263,7 @@ class ExcelTransformer(object):
 
             indexes = table_copy["Item"]
 
-            table_copy = self.__check_columns(table_copy)
+            table_copy = self._check_columns(table_copy)
             table_copy = self.fidc.correct_assets(table_copy)
             self._set_index(table_copy, indexes)
 
@@ -270,18 +302,36 @@ class ExcelTransformer(object):
             table_copy, indexes = self._standardize(table_copy, indexes)
             self._set_index(table_copy, indexes)
             table_copy = self.fidc.correct_values(table_copy)
+            table_copy = self.fidc.absolute_values(table_copy)
             table_copy = self.fidc.correct_percentages(
                 table_copy, "PL Total Classe (R$ mil)"
             )
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
+        # -------- ONIX --------------------------------------------------- #
+        elif fidc_type == "ONIX":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, indexes = self._standardize(table_copy, indexes, multi_item = True)
+            self._set_index(table_copy, indexes)
+            table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
+            table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
+
+            # -------- ONIX --------------------------------------------------- #
+        elif fidc_type == "RAIZES":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, indexes = self._standardize(table_copy, indexes, multi_item=True)
+            self._set_index(table_copy, indexes)
+            table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
+            table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
+
         # ----------------------------------------------------------------- #
         # Salvar / atualizar instância
         # ----------------------------------------------------------------- #
-        table_copy.index.name = "Data"
-        table_copy = self.fidc.convert_to_double(table_copy)
 
+        table_copy = self.fidc.convert_to_double(table_copy)
+        table_copy = self.fidc._days_to_end_of_month(table_copy)
+        table_copy.index.name = "Data"
         path_out = "./out/" + self.fidc.name + ".csv" # tem q colocar a data depois
         table_copy.to_csv(path_out, sep = ";",  encoding = "utf-8-sig")
 

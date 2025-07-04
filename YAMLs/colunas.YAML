@@ -15,6 +15,9 @@ PL Subordinada Jr:
   - "PL Subordinada Jr:"
   - PL Subordinada Junior
   - PL Subordinada Júnior
+  - "PL Subordinada Júnior,"
+  - "PL Subordinada Junior,"
+  - "PL Subordinada Jr,"
 
 Carteira (Direitos Creditórios):
   - Carteira (Direiros Creditórios)
@@ -42,7 +45,10 @@ Taxa Média:
   - Taxa Média a.m
   - Taxa Média a.m (*)
   - Taxa Média (a.m.)
-  - Taxa Ponderada de Cessão # tem q ver
+
+Taxa Ponderada de Cessão:
+  - Taxa Ponderada de Cessao
+# tem q ver
 
 Prazo Médio:
   - Prazo Médio Carteira (Dir.Creditórios) D.U
