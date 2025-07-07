@@ -685,7 +685,6 @@
       - '(?i)\s*10\s+Maiores\s+Sacados\s*\(R\$\)\s*': 'remove'
       - '(?i)\s*Sacado\s*(?:[1-9]|10)\s*': 'repeat'
       - '(?i)\s*Maior\s+Sacado\s*-\s*S/PL\s*': 'percent'
-
 'RAIZES':
   - 'COLUMNS':
       - '(?i)\s*PL\s+Total\s*': 'value'

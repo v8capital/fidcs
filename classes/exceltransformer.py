@@ -330,7 +330,7 @@ class ExcelTransformer(object):
         # ----------------------------------------------------------------- #
 
         table_copy = self.fidc.convert_to_double(table_copy)
-        table_copy = self.fidc._days_to_end_of_month(table_copy)
+        table_copy = self.fidc._days_to_start_of_month(table_copy)
         table_copy.index.name = "Data"
         path_out = "./out/" + self.fidc.name + ".csv" # tem q colocar a data depois
         table_copy.to_csv(path_out, sep = ";",  encoding = "utf-8-sig")

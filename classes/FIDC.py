@@ -50,6 +50,9 @@ class FIDC():
 
         return float(s.replace('.', '').replace(',', '.'))
 
+    # TODO ver a questão dos dias corridos e úteis
+    # def correct_days(self, data: pd.DataFrame) -> pd.DataFrame:
+
     def convert_to_double(self, data: pd.DataFrame) -> pd.DataFrame:
         """Sanitise DataFrame and return it as float64 (“double”)."""
 
@@ -151,17 +154,15 @@ class FIDC():
         data[assets] = data[assets].multiply(data[dc[0]], axis = 0)
         return data
 
-    def _days_to_end_of_month(self, data) -> None:
-        # converter pro mesmo tipo, um tá datetime e outro timestamp talvez esteja dando problema
-
+    def _days_to_start_of_month(self, data) -> None:
         df = data.copy()
         df.index = pd.to_datetime(df.index, errors='coerce')
         df = df[~df.index.isna()]
 
-        df.index = pd.to_datetime(df.index.to_period('M').to_timestamp('M'))
-        df = df.groupby(df.index).first()
+        # set index to the first day of each month
+        df.index = df.index.to_period('M').to_timestamp(how='start')
 
-        return df
+        return df.groupby(df.index).first()
 
     def create_total_liquid(self, data):
         liquid_days_p = list({k for d in self.pattern for k, v in d.items() if v == "liquids"})
@@ -187,7 +188,7 @@ class FIDC():
             if isinstance(raw, (pd.Timestamp,)):
                 arr_en.append(raw)
             elif isinstance(raw, str):
-                s = re.sub(r"\s+", " ", raw.strip()).replace("-", " ")
+                s = re.sub(r"\s+", " ", raw.strip()).replace("-"," ")
                 for month in month_list:
                     if month in s:
                         s = s.replace(month, month_list[month])
