@@ -23,32 +23,37 @@ def read_yaml(path):
 
 logger = LogFIDC()
 
-# tem que ver talvez mudar do _init_ pro transform, aí crio o transform uma vez e faço o resto
+# TODO tem que ver talvez mudar do _init_ pro transform, aí crio o transform uma vez e faço o resto
 
 class ExcelTransformer(object):
 
     def __init__(self, path, name):
         sheet_names =  pd.ExcelFile(path).sheet_names
         patterns_fidcs = read_yaml(PATH + 'FIDCs.yaml')
+        type, pattern = self._check_name(name, patterns_fidcs)
 
-        if len(sheet_names) > 1:
+        if len(sheet_names) > 1 and type in ["ORRAM", "MULTIASSET"]:
             tables = []
             for sheet in sheet_names:
                 df = pd.read_excel(path, sheet_name=sheet, header = None)
                 df = df.T
-
                 #print(df)
                 df.reset_index(drop=True, inplace=True)
                 tables.append(df)
             raw_table = tables.copy()
             table = pd.concat(tables, axis = 1)
             table = table.dropna(how='all')
+        elif type == "SOLAR":
+            raw_table = pd.read_excel(path, sheet_name = "Dados", header = None)
+            table = raw_table.T
+        elif len(sheet_names) > 1 and type not in ["ORRAM", "MULTIASSET"]:
+            logger.warning(f"Mais de uma sheet encontrada no FIDC {name}, será lida apenas a primeira.")
+            raw_table = pd.read_excel(path)
+            table = raw_table.T
         else:
             raw_table = pd.read_excel(path)
             table = raw_table.T
         #self.table.to_csv("./out/raw_" + name + ".csv", sep = ";",  encoding = "utf-8-sig")
-        type, pattern = self._check_name(name, patterns_fidcs)
-
         self.fidc = FIDC(table = table, raw_table = raw_table, name = name, type = type, pattern = pattern)
         logger.info(f"FIDC {self.fidc.name} da Gestora {self.fidc.type} carregado com sucesso.")
 
@@ -68,7 +73,6 @@ class ExcelTransformer(object):
                     break  # interrompe o loop interno
             if found:
                 break
-
         tbl.columns = tbl.iloc[m, :].infer_objects()
         tbl = tbl.drop(tbl.index[:m + 1])
 

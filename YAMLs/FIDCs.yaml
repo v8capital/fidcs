@@ -48,7 +48,7 @@
         - '(?i)\s*Volume\s+operado\s*': 'value'
         - '(?i)\*?Recompra\*?': 'value'
         - '(?i)\s*Liquidados\s*': 'value'
-        - '(?i)\s*Liquidados\s+Total\s*': 'value'
+        - '(?i)\s*Liquidados\s+(Total\s*)?': 'value'
         - '(?i)\s*Liquidados\s+antes\s+do\s+vencimento\s*': 'value'
         - '(?i)\s*Liquidados\s+na\s+data\s*': 'value'
         - '(?i)\s*Vencidos\s+at[eé]\s+15\s+dias\s*': 'value'
@@ -66,9 +66,12 @@
       - 'AUDAX'
       - 'FATTOR'
       - 'IOX'
+      #- 'IOXI'
+      - 'IOXII'
       - 'MATRIZ'
       - 'NOVACAPITAL'
       - 'STARS'
+      - 'ACREDITAR'
 
 'M8':
   - 'COLUMNS':

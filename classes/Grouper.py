@@ -238,6 +238,24 @@ class Grouper(object):
                 ordered_cols.insert(idx_destino, 'PDD À Vencer')
 
         return ordered_cols
+    def _create_additional_columns(self, data):
+
+        data["Subordinação (%)"] = (data["PL Mezanino"] + data["PL Subordinada Jr"]) / data["PL Total"] * 100
+        data["Subordinação Jr (%)"] =  data["PL Subordinada Jr"] / data["PL Total"] * 100
+        data["PDD Total (PL%)"] = data["PDD Total"] / data["PL Total"] * 100
+        data["Vencidos Total (PL%)"] = data["Vencidos Total"] / data["PL Total"] * 100
+        data["Concentração Maior Cedente (PL%)"] = data["Cedente 1"] / data["PL Total"] * 100
+        data["Concentração Maior Sacado (PL%)"]  = data["Sacado 1"]  / data["PL Total"] * 100
+        data["Concentração 10 Maiores Cedentes (PL%)"] = data["Concentração Top 10 Cedentes (R$)"] / data["PL Total"] * 100
+        data["Concentração 10 Maiores Sacados (PL%)"] = data["Concentração Top 10 Sacados (R$)"] / data["PL Total"] * 100
+        data["Recompra (PL%)"] = data["Recompra (R$)"]  / data["PL Total"] * 100
+        data["Volume Operado (PL%)"] = data["Volume Operado"] / data["PL Total"] * 100
+        data["Caixa/Disponibilidades (%PL)"] = data["Caixa/Disponibilidades"] / data["PL Total"] * 100
+        data["Liquidados Total (PL%)"] = data["Liquidado Total (R$)"] / data["PL Total"] * 100
+        data["Duplicata (PL%)"] = data["Duplicata"] / data["PL Total"] * 100
+
+
+        return data
 
     def read_csvs(self, path):
         # por enquanto eu vou ler todos os csvs de uma pasta X
@@ -290,6 +308,7 @@ class Grouper(object):
         ordered         = self._reorder_df_columns(main_columns, regex_cols)
         grouped_data    = grouped_data[ordered]
         grouped_data.index.name = 'FIDC'
+        grouped_data = self._create_additional_columns(grouped_data)
 
         name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
         path_out = "./grouped_data/" + name
