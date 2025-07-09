@@ -10,15 +10,15 @@ from classes.logger import LogFIDC
 
 import yaml
 import re
+import os
 
 pd.set_option('future.no_silent_downcasting', True)
 
+PATH = os.path.join(os.getcwd(), 'YAMLs')
 
-PATH = './YAMLs/'
 def read_yaml(path):
     with open(path, 'r', encoding='utf-8') as f:
         dados = yaml.safe_load(f)
-
     return dados  # Retorna como dicionário: {coluna_final: [possibilidades]}
 
 logger = LogFIDC()
@@ -29,11 +29,14 @@ class ExcelTransformer(object):
 
     def __init__(self, path, name):
         sheet_names =  pd.ExcelFile(path).sheet_names
-        patterns_fidcs = read_yaml(PATH + 'FIDCs.yaml')
+        patterns_fidcs = read_yaml(os.path.join(PATH, "FIDCs.yaml"))
         type, pattern = self._check_name(name, patterns_fidcs)
 
-        if len(sheet_names) > 1 and type in ["ORRAM", "MULTIASSET"]:
+        if len(sheet_names) > 1 and type in ["ORRAM", "MULTIASSET", "FIRMA"]:
             tables = []
+            if len(sheet_names) > 3:
+                logger.warning(f"Mais de 3 sheets encontrada no FIDC {name}, serão lidas as 3 primeiras.")
+                sheet_names = sheet_names[:-1]  # remove a última planilha
             for sheet in sheet_names:
                 df = pd.read_excel(path, sheet_name=sheet, header = None)
                 df = df.T
@@ -53,7 +56,7 @@ class ExcelTransformer(object):
         else:
             raw_table = pd.read_excel(path)
             table = raw_table.T
-        #self.table.to_csv("./out/raw_" + name + ".csv", sep = ";",  encoding = "utf-8-sig")
+        #self.table.to_csv("./PARSED/raw_" + name + ".csv", sep = ";",  encoding = "utf-8-sig")
         self.fidc = FIDC(table = table, raw_table = raw_table, name = name, type = type, pattern = pattern)
         logger.info(f"FIDC {self.fidc.name} da Gestora {self.fidc.type} carregado com sucesso.")
 
@@ -190,7 +193,7 @@ class ExcelTransformer(object):
     # --------------------------------------------------------------------- #
     # TRANSFORM
     # --------------------------------------------------------------------- #
-    def transform_table(self):
+    def transform_table(self, path_base):
         # para não modificar a table o tempo inteiro vou criar uma cópia e modificar ela
         table_copy = self.fidc.table.copy()
         fidc_type = self.fidc.type
@@ -234,7 +237,7 @@ class ExcelTransformer(object):
             table_copy = self.fidc.correct_assets(table_copy)
             self._set_index(table_copy, indexes)
 
-        # ----------- ALFA ------------------------------------------------ #
+        # -------- ALFA ---------------------------------------------------- #
         elif fidc_type == "ALFA":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes)
@@ -242,14 +245,14 @@ class ExcelTransformer(object):
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
-        # -------- BARCELONA ---------------------------------------------- #
+        # -------- BARCELONA ----------------------------------------------- #
         elif fidc_type == "BARCELONA":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes)
             table_copy = self.fidc.correct_assets(table_copy)
             self._set_index(table_copy, indexes)
 
-        # -------- MULTIASSET --------------------------------------------- #
+        # -------- MULTIASSET ---------------------------------------------- #
         elif fidc_type == "MULTIASSET":
             def _prep_sheet(sheet):
                 sheet, idx = self._extract_indexes_and_prepare(sheet, "Item")
@@ -271,7 +274,7 @@ class ExcelTransformer(object):
             table_copy = self.fidc.correct_assets(table_copy)
             self._set_index(table_copy, indexes)
 
-        # -------- MULTIPLIKE --------------------------------------------- #
+        # -------- MULTIPLIKE ---------------------------------------------- #
         elif fidc_type == "MULTIPLIKE":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes)
@@ -313,7 +316,7 @@ class ExcelTransformer(object):
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
-        # -------- ONIX --------------------------------------------------- #
+        # -------- ONIX ---------------------------------------------------- #
         elif fidc_type == "ONIX":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes, multi_item = True)
@@ -321,13 +324,33 @@ class ExcelTransformer(object):
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
-            # -------- ONIX --------------------------------------------------- #
+        # -------- RAIZES -------------------------------------------------- #
         elif fidc_type == "RAIZES":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes, multi_item=True)
             self._set_index(table_copy, indexes)
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
+
+        # -------- FIRMA --------------------------------------------------- #
+        elif fidc_type == "FIRMA":
+            def _prep_sheet(sheet):
+                sheet, idx = self._extract_indexes_and_prepare(sheet, "Item")
+                sheet, _ = self._standardize(sheet, idx, do_check=False)  # <- skip check here
+                return sheet
+
+            processed = [
+                _prep_sheet(s.dropna(how="all"))  # ignore empty sheets
+                for s in self.fidc.raw_table
+            ]
+
+            table_copy = reduce(
+                lambda l, r: pd.merge(l, r, on="Item", how="inner"),
+                processed,
+            )
+            indexes = table_copy["Item"]
+            table_copy = self._check_columns(table_copy)
+            self._set_index(table_copy, indexes)
 
         # ----------------------------------------------------------------- #
         # Salvar / atualizar instância
@@ -336,7 +359,7 @@ class ExcelTransformer(object):
         table_copy = self.fidc.convert_to_double(table_copy)
         table_copy = self.fidc._days_to_start_of_month(table_copy)
         table_copy.index.name = "Data"
-        path_out = "./out/" + self.fidc.name + ".csv" # tem q colocar a data depois
+        path_out = os.path.join(os.getcwd(), "data", "PARSED", f"{self.fidc.name}.csv") # tem q colocar a data depois
         table_copy.to_csv(path_out, sep = ";",  encoding = "utf-8-sig")
 
         self.fidc.table = table_copy.copy()

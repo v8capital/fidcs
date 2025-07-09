@@ -16,6 +16,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv/
 
 # Arquivos do editor
 .vscode/
@@ -45,9 +46,9 @@ local_settings.py
 *.xlsx
 
 # Pastas Indesejadas
-examples/
-out/
 v8_utilities/
-grouped_data/
+data/
+data/RAW/
+data/PARSED/
+data/GROUPED/
 testes/
-

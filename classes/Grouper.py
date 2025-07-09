@@ -10,11 +10,11 @@ import re
 import os
 
 
-PATH = './YAMLs/'
+PATH = os.path.join(os.getcwd(), 'YAMLs')
+
 def read_yaml(path):
     with open(path, 'r', encoding='utf-8') as f:
         dados = yaml.safe_load(f)
-
     return dados  # Retorna como dicionário: {coluna_final: [possibilidades]}
 
 logger = LogV8()
@@ -23,8 +23,8 @@ logger = LogV8()
 
 class Grouper(object):
     def __init__(self):
-        self.equiv_columns =  read_yaml(PATH + "/colunas.YAML")
-        self.regex_patterns = read_yaml(PATH + "/regex.YAML")
+        self.equiv_columns =  read_yaml(os.path.join(PATH, "colunas.yaml"))
+        self.regex_patterns = read_yaml(os.path.join(PATH, "regex.yaml"))
         self.csv_dict: Dict[str, pd.DataFrame] = {}
 
     # ------------------------  PROCESSAMENTO DE STRINGS  ------------------------ #
@@ -311,7 +311,8 @@ class Grouper(object):
         grouped_data = self._create_additional_columns(grouped_data)
 
         name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
-        path_out = "./grouped_data/" + name
+        path_out = os.path.join(os.getcwd(), "data", "GROUPED", name)
+
         grouped_data.to_csv(path_out , sep=';', encoding='utf-8-sig')
         logger.info(f"Agrupamento feito com Sucesso. Arquivo salvo em {path_out}")
 

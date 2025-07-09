@@ -8,19 +8,20 @@ import yaml
 import logging
 import warnings
 import re
+import os
 
-PATH = './YAMLs/'
+PATH = os.path.join(os.getcwd(), 'YAMLs')
+
 def read_yaml(path):
     with open(path, 'r', encoding='utf-8') as f:
         dados = yaml.safe_load(f)
-
     return dados  # Retorna como dicionário: {coluna_final: [possibilidades]}
 
 logger = LogFIDC()
 
 class FIDC():
     def __init__(self, table: pd.DataFrame, raw_table: Union[pd.DataFrame, list], name: str, type: str, pattern: list) -> None:
-        patterns_fidcs = read_yaml(PATH + 'FIDCs.yaml')
+        patterns_fidcs = read_yaml(os.path.join(PATH, "FIDCs.yaml"))
 
         self.raw_table = raw_table
         self.table = table
@@ -179,7 +180,7 @@ class FIDC():
             "Novembro": "November", "Dezembro": "December",
             "jan": "January", "fev": "February", "mar": "March",
             "abr": "April", "mai": "May", "jun": "June", "jul": "July",
-            "ago": "August", "set": "September", "out": "October",
+            "ago": "August", "set": "September", "oct": "October",
             "nov": "November", "dez": "December"
         }
 
