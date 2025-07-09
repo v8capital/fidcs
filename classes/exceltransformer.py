@@ -23,6 +23,7 @@ def read_yaml(path):
 
 logger = LogFIDC()
 
+# TODO VER DPS
 # TODO tem que ver talvez mudar do _init_ pro transform, aí crio o transform uma vez e faço o resto
 
 class ExcelTransformer(object):
@@ -65,21 +66,24 @@ class ExcelTransformer(object):
     # --------------------------------------------------------------------- #
     def _extract_indexes_and_prepare(self, tbl, item_label="Item"):
         """Pull the index column, promote first row to header, drop original header row."""
-        found = False
-        m = 0
-        for i in range(tbl.shape[0]):
-            for j in range(tbl.shape[1]):
-                if tbl.iloc[i, j] == item_label:
-                    idx = tbl.iloc[i + 1:, j]  # values below header row
-                    m = i
-                    found = True
-                    break  # interrompe o loop interno
-            if found:
-                break
-        tbl.columns = tbl.iloc[m, :].infer_objects()
-        tbl = tbl.drop(tbl.index[:m + 1])
+        try:
+            found = False
+            m = 0
+            for i in range(tbl.shape[0]):
+                for j in range(tbl.shape[1]):
+                    if tbl.iloc[i, j] == item_label:
+                        idx = tbl.iloc[i + 1:, j]  # values below header row
+                        m = i
+                        found = True
+                        break  # interrompe o loop interno
+                if found:
+                    break
+            tbl.columns = tbl.iloc[m, :].infer_objects()
+            tbl = tbl.drop(tbl.index[:m + 1])
 
-        return tbl, idx
+            return tbl, idx
+        except Exception as e:
+            raise(f"Erro ao extrair índices das datas do FIDC: {e}")
 
     def _standardize(self, tbl, idx, *, subset = "Item", drop_item=True, do_check=True, reset_index = True, multi_item = False):
         """Optional Item‑column NA cleanup, generic column checks, re‑index reset."""
@@ -121,8 +125,7 @@ class ExcelTransformer(object):
                 pattern = next(iter(patterns_fidcs[manager_name][0].values()))
                 type = manager_name
                 return type, pattern
-        logger.error(f"Nome {name} não encontrado")
-        raise Exception("Nome não encontrado no YAML de padrões de FIDCs.")
+        raise Exception(f"Nome {name} não encontrado no YAML de padrões de FIDCs.")
 
 
     def _check_columns(self, data):
@@ -359,7 +362,7 @@ class ExcelTransformer(object):
         table_copy = self.fidc.convert_to_double(table_copy)
         table_copy = self.fidc._days_to_start_of_month(table_copy)
         table_copy.index.name = "Data"
-        path_out = os.path.join(os.getcwd(), "data", "PARSED", f"{self.fidc.name}.csv") # tem q colocar a data depois
+        path_out = os.path.join(os.getcwd(), "data", "PARSED", f"{self.fidc.name}.csv")
         table_copy.to_csv(path_out, sep = ";",  encoding = "utf-8-sig")
 
         self.fidc.table = table_copy.copy()

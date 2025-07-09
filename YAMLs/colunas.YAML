@@ -53,7 +53,8 @@ Taxa Ponderada de Cessão:
 Prazo Médio:
   - Prazo Médio Carteira (Dir.Creditórios) D.U
   - Prazo médio
-  - Prazo Médio Recebíveis Estoque (dias úteis)
+  # - Prazo Médio Recebíveis Estoque (dias úteis)
+  - Prazo Médio Operações no Mês
   - Prazo medio
   - Prazo médio aquisição no mês
   - Prazo medio (em dias corridos)

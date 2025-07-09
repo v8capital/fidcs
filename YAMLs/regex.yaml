@@ -1,0 +1,4 @@
+regex:
+  - 'Cedente\s+\d+'
+  - 'Sacado\s+\d+'
+  - '^\((Vencidos Total|PDD Total|PDD À Vencer)\)\s*(\d+\s*-\s*\d+\s*dias|>\s*\d+\s*dias)\b'

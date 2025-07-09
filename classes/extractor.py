@@ -43,12 +43,8 @@ class Extractor(SharePoint):
             return folder_names
         # caso ocorra erro, aqui tem que acabar, pq é a base de tudo
         except requests.exceptions.Timeout:
-            logger.error(f"Timeout ao listar arquivos na pasta '{path_file}'.")
             raise(TimeoutError(f"Timeout ao listar arquivos na pasta '{path_file}'."))
         except requests.exceptions.RequestException as e:
-            logger.error(f"Erro de requisição ao listar arquivos na pasta '{path_file}': {e}")
             raise(requests.exceptions.RequestException(f"Erro de requisição ao listar arquivos na pasta '{path_file}': {e}"))
         except Exception as e:
-            logger.error(f"Erro inesperado ao listar arquivos na pasta '{path_file}': {e}")
             raise(Exception(f"Erro inesperado ao listar arquivos na pasta '{path_file}': {e}"))
-

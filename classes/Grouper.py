@@ -23,9 +23,12 @@ logger = LogV8()
 
 class Grouper(object):
     def __init__(self):
-        self.equiv_columns =  read_yaml(os.path.join(PATH, "colunas.yaml"))
-        self.regex_patterns = read_yaml(os.path.join(PATH, "regex.yaml"))
-        self.csv_dict: Dict[str, pd.DataFrame] = {}
+        try:
+            self.equiv_columns =  read_yaml(os.path.join(PATH, "colunas.yaml"))
+            self.regex_patterns = read_yaml(os.path.join(PATH, "regex.yaml"))
+            self.csv_dict: Dict[str, pd.DataFrame] = {}
+        except:
+            raise (f"Erro na criação do grouper, arquivos YAML não encontrados.")
 
     # ------------------------  PROCESSAMENTO DE STRINGS  ------------------------ #
     @staticmethod
@@ -159,29 +162,28 @@ class Grouper(object):
         self.csv_dict = {k: df[columns[k]] for k, df in self.csv_dict.items()}
 
     def _group_by_date(self, date: str | pd.Timestamp) -> pd.DataFrame:
-        list_dates = []
+        try:
+            list_dates = []
 
-        for key, df in self.csv_dict.items():
-            if date in df.index:
-                row = df.loc[date]
-                row_df = pd.DataFrame([row], index = [key])
-            else:
-                row_df = pd.DataFrame([{col: pd.NA for col in df.columns}], index=[key])
-            list_dates.append(row_df)
+            for key, df in self.csv_dict.items():
+                if date in df.index:
+                    row = df.loc[date]
+                    row_df = pd.DataFrame([row], index=[key])
+                else:
+                    row_df = pd.DataFrame([{col: pd.NA for col in df.columns}], index=[key])
+                list_dates.append(row_df)
 
-        frames = [
-            f.dropna(axis=1, how="all")  # strip all‑NA columns first
-            for f in list_dates
-            if not f.dropna(how="all").empty  # skip if nothing left
-        ]
-        frames = [
-            f.dropna(axis=1, how="all")  # strip all‑NA columns first
-            for f in list_dates
-            if not f.dropna(how="all").empty  # skip if nothing left
-        ]
+            frames = [
+                f.dropna(axis=1, how="all")
+                for f in list_dates
+                if not f.dropna(how="all").empty
+            ]
 
-        result = pd.concat(frames, axis=0, sort=True)
-        return result
+            result = pd.concat(frames, axis=0, sort=True)
+            return result
+        except Exception as e:
+            raise Exception(f"Erro no Agrupamento por data: {e}")
+
 
     # ------------------------  ORDENADOR DE COLUNAS  ------------------------ #
     def _extract_order(self, item: str):
@@ -238,6 +240,9 @@ class Grouper(object):
                 ordered_cols.insert(idx_destino, 'PDD À Vencer')
 
         return ordered_cols
+
+    # -------------------  CALCULO DAS MÉTRICAS PEDIDAS  ------------------ #
+
     def _create_additional_columns(self, data):
 
         data["Subordinação (%)"] = (data["PL Mezanino"] + data["PL Subordinada Jr"]) / data["PL Total"] * 100
@@ -258,62 +263,64 @@ class Grouper(object):
         return data
 
     def read_csvs(self, path):
-        # por enquanto eu vou ler todos os csvs de uma pasta X
-        csv_dict = {}
+        try:
+            csv_dict = {}
 
-        def remove_suffix(columns):
-            new_columns = []
-            for col in columns:
-                # Remove sufixo do tipo .1, .2, .3 no final da string
-                new_col = re.sub(r'\.\d+$', '', col)
-                new_columns.append(new_col)
-            return new_columns
+            def remove_suffix(columns):
+                new_columns = []
+                for col in columns:
+                    new_col = re.sub(r'\.\d+$', '', col)
+                    new_columns.append(new_col)
+                return new_columns
 
-        # Percorre todos os arquivos na pasta
-        for file in os.listdir(path):
-            if file.endswith('.csv'):
-                path_file = os.path.join(path, file)
-                name_file = os.path.splitext(file)[0]  # Remove a extensão
-                df = pd.read_csv(path_file, sep=';', encoding='utf-8-sig', index_col="Data", ).astype("float64")
-                # ajuste encoding se necessário
-                logger.info(f"FIDC {name_file} encontrado para agrupamento.")
-                df.columns = remove_suffix(df.columns)
-                df = self._days_column_processing(df)
-                df = self._rename_equiv_columns(df)
-                df = self._grouping_days_column(df)
-                csv_dict[name_file] = df
-        self.csv_dict = csv_dict
+            for file in os.listdir(path):
+                if file.endswith('.csv'):
+                    try:
+                        path_file = os.path.join(path, file)
+                        name_file = os.path.splitext(file)[0]
+                        df = pd.read_csv(path_file, sep=';', encoding='utf-8-sig', index_col="Data").astype("float64")
+                        logger.info(f"FIDC {name_file} encontrado para agrupamento.")
+                        df.columns = remove_suffix(df.columns)
+                        df = self._days_column_processing(df)
+                        df = self._rename_equiv_columns(df)
+                        df = self._grouping_days_column(df)
+                        csv_dict[name_file] = df
+                    except Exception as e:
+                        logger.error(f"Erro ao processar o arquivo {file}: {e}")
+            self.csv_dict = csv_dict
+        except Exception as e:
+            raise Exception(f"Erro ao ler os arquivos CSVs do diretório {path}: {e}")
 
-    # -------------------  CALCULO DAS MÉTRICAS PEDIDAS  ------------------ #
-    # TO DO
 
     # ------------------------  AGRUPAMENTO FINAL  ------------------------ #
 
     def group_fidcs(self, date: str | pd.Timestamp) -> pd.DataFrame:
+        try:
+            logger.info(f"Iniciando agrupamento dos FIDCs para a data: {date}")
 
-        logger.info(f"Iniciando agrupamento dos FIDCs para a data: {date}")
+            by_name = self._selecting_columns_by_name()
+            by_regex = self._selecting_columns_by_regex()
 
-        by_name = self._selecting_columns_by_name()
-        by_regex = self._selecting_columns_by_regex() # {"ALFA": ["Coluna1", "Coluna2", ...], ...}
+            column_names = {k: by_name.get(k, []) + by_regex.get(k, [])
+                            for k in by_name.keys()}
 
-        column_names = {k: by_name.get(k, []) + by_regex.get(k, [])
-                        for k in by_name.keys()}
+            self._filter_final_columns(column_names)
 
-        self._filter_final_columns(column_names) # mantendo apenas as colunas de interesse
+            grouped_data = self._group_by_date(date)
 
-        grouped_data = self._group_by_date(date)
+            regex_cols = list(pd.Series(chain.from_iterable(by_regex.values())).drop_duplicates())
+            main_columns = list(self.equiv_columns.keys())
+            ordered = self._reorder_df_columns(main_columns, regex_cols)
+            grouped_data = grouped_data[ordered]
+            grouped_data.index.name = 'FIDC'
+            grouped_data = self._create_additional_columns(grouped_data)
 
-        regex_cols      = list(pd.Series(chain.from_iterable(by_regex.values())).drop_duplicates())
-        main_columns    = list(self.equiv_columns.keys())
-        ordered         = self._reorder_df_columns(main_columns, regex_cols)
-        grouped_data    = grouped_data[ordered]
-        grouped_data.index.name = 'FIDC'
-        grouped_data = self._create_additional_columns(grouped_data)
+            name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
+            path_out = os.path.join(os.getcwd(), "data", "GROUPED", name)
 
-        name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
-        path_out = os.path.join(os.getcwd(), "data", "GROUPED", name)
+            grouped_data.to_csv(path_out, sep=';', encoding='utf-8-sig')
+            logger.info(f"Agrupamento feito com Sucesso. Arquivo salvo em {path_out}")
 
-        grouped_data.to_csv(path_out , sep=';', encoding='utf-8-sig')
-        logger.info(f"Agrupamento feito com Sucesso. Arquivo salvo em {path_out}")
-
-        return grouped_data
+            return grouped_data
+        except Exception as e:
+            raise Exception(f"Erro ao agrupar FIDCs para a data {date}: {e}")
