@@ -118,6 +118,7 @@ class FIDC():
 
 
     def clean_column_names(self, data):
+        # acredito que essa função pode ser inserida na correct_column_names mas não farei isso agr
         novas_colunas = []
         for nome in data.columns:
             texto_modificado = re.sub(r'(Cedente\s+\d+)\s+\(Vlr Presente-PDD\)', r'\1', nome)
@@ -154,6 +155,24 @@ class FIDC():
         #print(dc)
         data[assets] = data[assets].multiply(data[dc[0]], axis = 0)
         return data
+
+    def correct_column_names(self, data):
+        def clean_col(col):
+            return re.sub(r'\s*\(.*?\)\s*', '', col).strip()
+        print("CHAMOU")
+        par_cols = [k for d in self.pattern for k, v in d.items() if v == "removepar"]
+        new_columns = {}
+        print(par_cols)
+        for col in data.columns:
+            if any(re.fullmatch(pat, col) for pat in par_cols):
+                print(col)
+                new_columns[col] = clean_col(col)
+            else:
+                new_columns[col] = col  # mantém original
+
+        data = data.rename(columns=new_columns)
+        return data
+
 
     def _days_to_start_of_month(self, data) -> None:
         df = data.copy()

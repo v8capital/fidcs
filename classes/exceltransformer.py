@@ -138,7 +138,7 @@ class ExcelTransformer(object):
             expected_column_name, type_column = next(iter(item.items()))
             #print(columns)
             matched = any(
-                re.fullmatch(expected_column_name, col, flags=re.IGNORECASE)
+                re.fullmatch(expected_column_name, col)
                 for col in columns
             )
 
@@ -168,7 +168,7 @@ class ExcelTransformer(object):
                         else:
                             data = data.drop(col, axis=1)
                             logger.debug(f" Coluna {col} removida, devido ao atributo 'remove'")
-                    if value == "solarremove":
+                    if value == "removerepeat":
                         idx = data.columns.get_loc(col)
                         # tratamento de erro besta, por causa da merda do solar que tem 1 exceção e não quero mexer no q ta funcionando
                         pos = np.where(idx)[0]  # apagando pelo começo
@@ -245,6 +245,7 @@ class ExcelTransformer(object):
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes)
             self._set_index(table_copy, indexes)
+
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
@@ -354,6 +355,26 @@ class ExcelTransformer(object):
             indexes = table_copy["Item"]
             table_copy = self._check_columns(table_copy)
             self._set_index(table_copy, indexes)
+
+        # -------- RNX ----------------------------------------------------- #
+
+        elif fidc_type == "RNX":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, indexes = self._standardize(table_copy, indexes)
+            date = self.fidc.convert_date(indexes)
+            self._set_index(table_copy, date)
+            table_copy = self.fidc.correct_column_names(table_copy)
+            table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
+            table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
+
+
+        elif fidc_type == "SABIA":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, indexes = self._standardize(table_copy, indexes)
+            date = self.fidc.convert_date(indexes)
+            self._set_index(table_copy, date)
+            table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
+            table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
         # ----------------------------------------------------------------- #
         # Salvar / atualizar instância

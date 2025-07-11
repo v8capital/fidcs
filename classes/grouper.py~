@@ -248,8 +248,7 @@ class Grouper(object):
         data["Subordinação (%)"] = (data["PL Mezanino"] + data["PL Subordinada Jr"]) / data["PL Total"] * 100
         data["Subordinação Jr (%)"] =  data["PL Subordinada Jr"] / data["PL Total"] * 100
         data["PDD Total (PL%)"] = data["PDD Total"] / data["PL Total"] * 100
-        data["CVNP (PL%)"] = data["Vencidos Total"] / data["PL Total"] * 100
-        data["CVNP - PDD (PL%)"] = data["CVNP (PL%)"] - data["PDD Total (PL%)"]
+        data["Vencidos Total (PL%)"] = data["Vencidos Total"] / data["PL Total"] * 100
         data["Concentração Maior Cedente (PL%)"] = data["Cedente 1"] / data["PL Total"] * 100
         data["Concentração Maior Sacado (PL%)"]  = data["Sacado 1"]  / data["PL Total"] * 100
         data["Concentração 10 Maiores Cedentes (PL%)"] = data["Concentração Top 10 Cedentes (R$)"] / data["PL Total"] * 100

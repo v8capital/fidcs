@@ -30,11 +30,13 @@ Quantidade de Cedentes:
   - Qtidade Cedentes
   - Quantidade Cedentes
   - "# cedentes"
+  - Cedentes com crédito tomado (*)
 
 Quantidade de Sacados:
   - Qtidade Sacados
   - Quantidade Sacados
   - "# sacados"
+  - Sacados com crédito tomado (*)
 
 Caixa/Disponibilidades:
   - Caixa+Disponibilidades
@@ -60,6 +62,7 @@ Prazo Médio:
   - Prazo medio (em dias corridos)
   - Prazo medio (dia útil)
   - Prazo médio  (dias úteis)
+  - Prazo médio (DU)
 
 Ticket Médio:
   - Ticket Médio (Valor Presente)
@@ -72,8 +75,10 @@ Cheques:
   - Cheque
   - Cheque (Vlr Presente-PDD)
   - Carteira (Cheques - Anima)
+  - "*Cheque*"
 
 Duplicata:
+  - "*Duplicata*"
   - Duplicatas
   - Duplicata (Vlr Presente-PDD)
   - Carteira (Duplicatas - Anima)
@@ -87,14 +92,17 @@ Contrato:
   - Contrato Físico
   - Contrato Fisico
   - Contrato (Vlr Presente-PDD)
+  - "*Contrato*"
 
 Nota Comercial:
   - "Nota Comercial "
+  - "*Nota Comercial*"
 
 Confissão de Dívida:
   - Confissao de Divida
   - Confissão de Divida
   - Confissão de Dívida
+  - "*Confissao de Divida*"
 
 Nota Promissória:
   - Nota Promissoria
@@ -102,11 +110,13 @@ Nota Promissória:
   - Nota Promissória (Vlr Presente-PDD)
   - Promissoria
   - Promissória
+  - "*Promissoria*"
 
 CCB:
   - CCB PRE
   - "CCB "
   - CCB (Vlr Presente-PDD)
+  - "*CCB PRE*"
 
 Resgates Subordinada Jr.:
   - Amortização e resgates Subordinada Jr.
@@ -128,12 +138,14 @@ Vencidos Total:
   - Vencidos Total (sem WO)
   - Vencidos
   - Vencidos (1 até 120 dias)
+  - "Aging List - Vencidos, Vencimento Original"
 #checar dps esse PDD Total Vencido (Base: Último Dia Útil do Mês) e PDD Total (sem WO)
 PDD Total:
   - PDD
   - PDD Total (R$) (Vlr PDD)
   - "PDD Total Vencido (Base: Último Dia Útil do Mês)"
   - PDD Total (sem WO)
+  - "PDD Total Vencido"
 
 PDD À Vencer:
   - PDD À Vencer (Devido efeito vagão)
@@ -148,6 +160,8 @@ Liquidado Total (R$):
   - Liquidados - Vencimento no Mês
   - Volume Liquidado
   - Volume liquidado
+  - "Liquidados - realizado no Mês "
+  - Liquidados
 
 Liquidado Antecipadamente:
   - Liquidado antecipadamente
@@ -196,6 +210,9 @@ Recompra (R$):
   - Recompra
   - Recompra do Valor Operado no Mês
   - Recompra dentro de borderô (R$)
+  - Recompra CVM (R$)
+  - "Recompra - realizada no Mês "
+  - "Recompra por Mês de Baixa dos Títulos"
 
 Concentração Top 10 Cedentes (R$):
   - 10 Maiores Cedentes (R$)
@@ -220,3 +237,9 @@ Volume Operado:
   - Valor Total Operado
   - Volume Operado (desembolso)
   - Valor Total Operado Nominal
+
+Valor Pago nas Operações no Mês:
+  - Valor Pago nas Operacoes no Mes
+  - Valor Pago nas Operações no Mês
+Fundo Soberano:
+  - "Fundo Soberano "

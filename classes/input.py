@@ -105,6 +105,28 @@ class Input:
             self.logger.error(f"Erro ao agrupar arquivos: {e}")
             raise e
 
+    def _standardize_and_group_only(self, date: datetime.date):
+        try:
+            raw_path = os.path.join(self.folder_root, "RAW")
+            date_str = date.strftime("%Y_%m_%d")
+
+            for filename in os.listdir(raw_path):
+                if filename.endswith(".xlsx") and date_str in filename:
+                    fidc = filename.split("_")[1]
+                    path_target = os.path.join(raw_path, filename)
+                    transformer = ExcelTransformer(path_target, fidc)
+                    transformer.transform_table(self.folder_root)
+
+            parsed_path = os.path.join(self.folder_root, "PARSED")
+            grouper = Grouper()
+            grouper.read_csvs(parsed_path)
+            formatted_date = date.replace(day=1).strftime("%Y-%m-%d")
+            grouper.group_fidcs(formatted_date)
+
+        except Exception as e:
+            self.logger.error(f"Erro ao padronizar e agrupar dados existentes: {e}")
+            raise e
+
     def _display_folders(self):
         try:
             st.subheader("📁 Dados FIDCs disponíveis")
@@ -206,6 +228,15 @@ class Input:
                 if st.button("🗑️ Limpar pastas"):
                     self._clean_folders()
                     st.success("Pastas RAW, PARSED e GROUPED limpas com sucesso!")
+
+                st.markdown("---")
+                if st.button("🔄 Padronizar e Agrupar dados existentes"):
+                    with st.spinner("Padronizando e agrupando dados existentes..."):
+                        try:
+                            self._standardize_and_group_only(selected_date)
+                            st.success("Padronização e agrupamento realizados com sucesso!")
+                        except Exception as e:
+                            st.error(f"Erro ao padronizar e agrupar: {e}")
 
             with col2:
                 self._display_folders()
