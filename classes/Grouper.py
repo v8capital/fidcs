@@ -262,8 +262,8 @@ class Grouper(object):
         else:
             data["Duplicata (PL%)"] = data["Duplicata"] / data["PL Total"] * 100
 
-        data['Taxa Média'] = data.apply(lambda row: row['Taxa Ponderada de Cessão']
-                                                    if pd.isna(row['Taxa Média']) else row['Taxa Média'], axis=1)
+        data['Taxa Média'] = data.apply(lambda row: row['Taxa Ponderada de Cessão'] * 100
+                                                    if pd.isna(row['Taxa Média']) else row['Taxa Média'] * 100, axis=1)
 
         data['Volume Operado (PL%)'] = data.apply(lambda row: (row['Valor Pago nas Operações no Mês']
                                                                 if not pd.isna(row['Valor Pago nas Operações no Mês'])
