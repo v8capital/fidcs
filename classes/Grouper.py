@@ -256,7 +256,12 @@ class Grouper(object):
         data["Concentração 10 Maiores Sacados (PL%)"] = data["Concentração Top 10 Sacados (R$)"] / data["PL Total"] * 100
         data["Recompra (PL%)"] = data["Recompra (R$)"]  / data["PL Total"] * 100
         data["Liquidados Total (PL%)"] = data["Liquidado Total (R$)"] / data["PL Total"] * 100
-        data["Duplicata (PL%)"] = data["Duplicata"] / data["PL Total"] * 100
+
+        if "Duplicata (%)" in data.columns:
+            data["Duplicata (PL%)"] = data["Duplicata (%)"]
+        else:
+            data["Duplicata (PL%)"] = data["Duplicata"] / data["PL Total"] * 100
+
         data['Taxa Média'] = data.apply(lambda row: row['Taxa Ponderada de Cessão']
                                                     if pd.isna(row['Taxa Média']) else row['Taxa Média'], axis=1)
 

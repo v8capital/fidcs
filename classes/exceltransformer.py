@@ -325,6 +325,7 @@ class ExcelTransformer(object):
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes, multi_item = True)
             self._set_index(table_copy, indexes)
+            table_copy = self.fidc.correct_assets(table_copy)
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 

@@ -17,14 +17,14 @@ def main():
     extractor = Extractor(site_name)
 
     # Caminho fixo para o mês de março de 2025
-    path_to_download = "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Fevereiro"
+    path_to_download = "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Abril"
 
     # FIDCs que deseja testar
-    fidcs_files = ["ALFA", "RNX"]
+    fidcs_files = ["ALFA", "PAGOL"]
 
     for fidc in fidcs_files:
         try:
-            name_ = f"FIDC_{fidc}_2025_02_01.xlsx"
+            name_ = f"FIDC_{fidc}_2025_04_01.xlsx"
             path_ = f"{path_to_download}/{fidc}"
             path_target = os.path.join(raw_path, name_)
 

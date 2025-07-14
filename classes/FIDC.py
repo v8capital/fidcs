@@ -145,15 +145,23 @@ class FIDC():
     def correct_assets(self, data):
         assets = list({k for d in self.pattern for k, v in d.items() if v == "asset"})
         dc = {k for d in self.pattern for k, v in d.items() if v == "dc"}
+        renames = list({k for d in self.pattern for k, v in d.items() if v == "rename"})
         #print(data.columns)
 
         assets, dc = [
             [val for val in data.columns if any(re.fullmatch(rx, val) for rx in padroes)]
             for padroes in (assets, dc)
         ]
+
+        renames = [val for val in data.columns if any(re.fullmatch(rx, val) for rx in renames)]
         #print(assets)
         #print(dc)
-        data[assets] = data[assets].multiply(data[dc[0]], axis = 0)
+        #print(renames)
+        for col in renames:
+            data[f"{col} (%)"] = data[col]
+            data[col] = np.nan
+        if dc:
+            data[assets] = data[assets].multiply(data[dc[0]], axis = 0)
         return data
 
     def correct_column_names(self, data):
