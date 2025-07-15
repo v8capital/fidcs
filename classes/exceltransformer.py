@@ -83,7 +83,7 @@ class ExcelTransformer(object):
 
             return tbl, idx
         except Exception as e:
-            raise(f"Erro ao extrair índices das datas do FIDC: {e}")
+            raise Exception(f"Erro ao extrair índices das datas do FIDC: {e}")
 
     def _standardize(self, tbl, idx, *, subset = "Item", drop_item=True, do_check=True, reset_index = True, multi_item = False):
         """Optional Item‑column NA cleanup, generic column checks, re‑index reset."""
@@ -282,6 +282,7 @@ class ExcelTransformer(object):
         elif fidc_type == "MULTIPLIKE":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes)
+
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
             table_copy.index = indexes
@@ -325,9 +326,14 @@ class ExcelTransformer(object):
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, indexes = self._standardize(table_copy, indexes, multi_item = True)
             self._set_index(table_copy, indexes)
+
+            table_copy = table_copy[
+                ~(pd.to_datetime(table_copy.index, errors="coerce")).isna()
+            ]
             table_copy = self.fidc.correct_assets(table_copy)
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
+
 
         # -------- RAIZES -------------------------------------------------- #
         elif fidc_type == "RAIZES":
@@ -380,7 +386,6 @@ class ExcelTransformer(object):
         # ----------------------------------------------------------------- #
         # Salvar / atualizar instância
         # ----------------------------------------------------------------- #
-
         table_copy = self.fidc.convert_to_double(table_copy)
         table_copy = self.fidc._days_to_start_of_month(table_copy)
         table_copy.index.name = "Data"

@@ -63,22 +63,34 @@ class FIDC():
         invalid_entries = ["-", " ", ""]
         data = data.replace(invalid_entries, np.nan).infer_objects(copy=False)
 
-        # 2. Row‑wise cleanup
-        for col in data.columns:
-            for idx, val in data[col].items():
-                # Ignore non‑scalar or already‑NaN values early
-                if not pd.api.types.is_scalar(val) or pd.isna(val):
+        rows_to_drop = set()
+
+        # 2. Row‑wise cleanup (colunas com nomes repetidos tratadas corretamente)
+        for i in range(data.shape[1]):
+            col = data.columns[i]
+            series = data.iloc[:, i]
+
+            for row_pos, (idx, val) in enumerate(series.items()):
+                if not pd.api.types.is_scalar(val):
                     continue
 
-                # Handle Brazilian/Portuguese formatted numbers
+                if pd.isna(val) and type(val).__name__ == "NaTType":
+                    logger.warning(
+                        f"Valor do tipo NaT encontrado | Coluna: '{col}' | Linha: {idx} — linha será removida"
+                    )
+                    rows_to_drop.add(idx)
+                    continue
+
+                if pd.isna(val):
+                    continue
+
                 if isinstance(val, str) and self._ptbr_num.match(val):
                     try:
-                        data.at[idx, col] = self._str_ptbr_to_float(val)
-                        continue  # done with this cell
+                        data.iat[row_pos, i] = self._str_ptbr_to_float(val)
+                        continue
                     except Exception:
-                        pass  # fall through to generic handler
+                        pass
 
-                # Generic numeric test
                 try:
                     float(val)
                 except Exception:
@@ -86,9 +98,13 @@ class FIDC():
                         f"Valor inválido convertido para NaN: '{val}' | "
                         f"Coluna: '{col}' | Linha: {idx}"
                     )
-                    data.at[idx, col] = np.nan
+                    data.iat[row_pos, i] = np.nan
 
-        # 3. Final conversion to float64 (“double”)
+        # Remoção das linhas marcadas
+        if rows_to_drop:
+            data = data.drop(index=rows_to_drop)
+
+        # 3. Conversão final para float64 (“double”)
         return data.astype("double")
 
     def absolute_values(self, data):

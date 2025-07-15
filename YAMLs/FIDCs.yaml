@@ -243,6 +243,7 @@
     - 'PAGOL'
     - 'SIFRAPLUS'
     - 'SIFRASTAR'
+    - 'RAM'
 
 'ALFA':
   - 'COLUMNS':
@@ -938,7 +939,6 @@ RNX:
       - '(?i)\s*Estimativa\s+folha\s*': 'value'
       - '(?i)\s*Remunera[çc][ãa]o\s+consultoria\s*': 'value'
       - '(?i)\s*NATUREZA\s+DOS\s+RECEB[ÍI]VEIS\s*': 'value'
-
 
 SABIA:
   - COLUNAS:
