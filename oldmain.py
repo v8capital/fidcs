@@ -17,14 +17,14 @@ def main():
     extractor = Extractor(site_name)
 
     # Caminho fixo para o mês de março de 2025
-    path_to_download = "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Abril"
+    path_to_download = "FIDCs Investidos/Relatórios/Planilhas de Monitoramentos/2025/Relatórios Maio"
 
     # FIDCs que deseja testar
-    fidcs_files = ["ALFA", "PAGOL"]
+    fidcs_files = ["ARTICO", "RNX"]
 
     for fidc in fidcs_files:
         try:
-            name_ = f"FIDC_{fidc}_2025_04_01.xlsx"
+            name_ = f"FIDC_{fidc}_2025_05_01.xlsx"
             path_ = f"{path_to_download}/{fidc}"
             path_target = os.path.join(raw_path, name_)
 
@@ -36,14 +36,12 @@ def main():
         except Exception as e:
             logger.error(f"O FIDC {fidc} será pulado devido ao erro: {e}")
             continue
-    """
     try:
         grouper = Grouper()
         grouper.read_csvs(parsed_path)
-        grouped_data = grouper.group_fidcs("2025-02-01")
+        grouped_data = grouper.group_fidcs("2025-05-01")
         print("Dados agrupados com sucesso.")
     except Exception as e:
         logger.error(f"Erro no agrupamento: {e}")
-    """
 if __name__ == "__main__":
     main()

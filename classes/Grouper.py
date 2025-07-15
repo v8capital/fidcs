@@ -244,38 +244,66 @@ class Grouper(object):
     # -------------------  CALCULO DAS MÉTRICAS PEDIDAS  ------------------ #
 
     def _create_additional_columns(self, data):
+        # Função auxiliar para checar existência da coluna
+        def has_col(col):
+            return col in data.columns
 
-        data["Subordinação (%)"] = (data["PL Mezanino"] + data["PL Subordinada Jr"]) / data["PL Total"] * 100
-        data["Subordinação Jr (%)"] =  data["PL Subordinada Jr"] / data["PL Total"] * 100
-        data["PDD Total (PL%)"] = data["PDD Total"] / data["PL Total"] * 100
-        data["CVNP (PL%)"] = data["Vencidos Total"] / data["PL Total"] * 100
-        data["CVNP - PDD (PL%)"] = data["CVNP (PL%)"] - data["PDD Total (PL%)"]
-        data["Concentração Maior Cedente (PL%)"] = data["Cedente 1"] / data["PL Total"] * 100
-        data["Concentração Maior Sacado (PL%)"]  = data["Sacado 1"]  / data["PL Total"] * 100
-        data["Concentração 10 Maiores Cedentes (PL%)"] = data["Concentração Top 10 Cedentes (R$)"] / data["PL Total"] * 100
-        data["Concentração 10 Maiores Sacados (PL%)"] = data["Concentração Top 10 Sacados (R$)"] / data["PL Total"] * 100
-        data["Recompra (PL%)"] = data["Recompra (R$)"]  / data["PL Total"] * 100
-        data["Liquidados Total (PL%)"] = data["Liquidado Total (R$)"] / data["PL Total"] * 100
+        if has_col("PL Mezanino") and has_col("PL Subordinada Jr") and has_col("PL Total"):
+            data["Subordinação (%)"] = (data["PL Mezanino"] + data["PL Subordinada Jr"]) / data["PL Total"] * 100
+        if has_col("PL Subordinada Jr") and has_col("PL Total"):
+            data["Subordinação Jr (%)"] = data["PL Subordinada Jr"] / data["PL Total"] * 100
+        if has_col("PDD Total") and has_col("PL Total"):
+            data["PDD Total (PL%)"] = data["PDD Total"] / data["PL Total"] * 100
+        if has_col("Vencidos Total") and has_col("PL Total"):
+            data["CVNP (PL%)"] = data["Vencidos Total"] / data["PL Total"] * 100
+        if "CVNP (PL%)" in data.columns and "PDD Total (PL%)" in data.columns:
+            data["CVNP - PDD (PL%)"] = data["CVNP (PL%)"] - data["PDD Total (PL%)"]
+        if has_col("Cedente 1") and has_col("PL Total"):
+            data["Concentração Maior Cedente (PL%)"] = data["Cedente 1"] / data["PL Total"] * 100
+        if has_col("Sacado 1") and has_col("PL Total"):
+            data["Concentração Maior Sacado (PL%)"] = data["Sacado 1"] / data["PL Total"] * 100
+        if has_col("Concentração Top 10 Cedentes (R$)") and has_col("PL Total"):
+            data["Concentração 10 Maiores Cedentes (PL%)"] = data["Concentração Top 10 Cedentes (R$)"] / data[
+                "PL Total"] * 100
+        if has_col("Concentração Top 10 Sacados (R$)") and has_col("PL Total"):
+            data["Concentração 10 Maiores Sacados (PL%)"] = data["Concentração Top 10 Sacados (R$)"] / data[
+                "PL Total"] * 100
+        if has_col("Recompra (R$)") and has_col("PL Total"):
+            data["Recompra (PL%)"] = data["Recompra (R$)"] / data["PL Total"] * 100
+        if has_col("Liquidado Total (R$)") and has_col("PL Total"):
+            data["Liquidados Total (PL%)"] = data["Liquidado Total (R$)"] / data["PL Total"] * 100
 
-        if "Duplicata (%)" in data.columns:
+        if has_col("Duplicata (%)"):
             data["Duplicata (PL%)"] = data["Duplicata (%)"]
-        else:
+        elif has_col("Duplicata") and has_col("PL Total"):
             data["Duplicata (PL%)"] = data["Duplicata"] / data["PL Total"] * 100
 
-        data['Taxa Média'] = data.apply(lambda row: row['Taxa Ponderada de Cessão'] * 100
-                                                    if pd.isna(row['Taxa Média']) else row['Taxa Média'] * 100, axis=1)
+        if has_col("Taxa Média") and has_col("Taxa Ponderada de Cessão"):
+            def calc_taxa_media(row):
+                if pd.isna(row["Taxa Média"]):
+                    return row["Taxa Ponderada de Cessão"] * 100
+                else:
+                    return row["Taxa Média"] * 100
 
-        data['Volume Operado (PL%)'] = data.apply(lambda row: (row['Valor Pago nas Operações no Mês']
-                                                                if not pd.isna(row['Valor Pago nas Operações no Mês'])
-                                                                else row['Volume Operado'])
-                                                              / row['PL Total'] * 100, axis=1)
+            data["Taxa Média"] = data.apply(calc_taxa_media, axis=1)
 
+        if has_col("Volume Operado") and has_col("Valor Pago nas Operações no Mês") and has_col("PL Total"):
+            def calc_volume_operado(row):
+                if not pd.isna(row["Valor Pago nas Operações no Mês"]):
+                    val = row["Valor Pago nas Operações no Mês"]
+                else:
+                    val = row["Volume Operado"]
+                return val / row["PL Total"] * 100
 
-        data["Caixa/Disponibilidades (%PL)"] = data.apply( lambda row: ((row["Caixa/Disponibilidades"] + row["Fundo Soberano"])
-                                                         if not pd.isna(row['Fundo Soberano'])
-                                                         else row["Caixa/Disponibilidades"])
-                                                        / row["PL Total"] * 100, axis=1)
+            data["Volume Operado (PL%)"] = data.apply(calc_volume_operado, axis=1)
 
+        if has_col("Caixa/Disponibilidades") and has_col("PL Total"):
+            def calc_caixa(row):
+                fundo = row["Fundo Soberano"] if has_col("Fundo Soberano") and not pd.isna(
+                    row.get("Fundo Soberano")) else 0
+                return (row["Caixa/Disponibilidades"] + fundo) / row["PL Total"] * 100
+
+            data["Caixa/Disponibilidades (%PL)"] = data.apply(calc_caixa, axis=1)
 
         return data
 
@@ -331,6 +359,7 @@ class Grouper(object):
             ordered = self._reorder_df_columns(main_columns, regex_cols)
             grouped_data = grouped_data[[col for col in ordered if col in grouped_data.columns]] # para evitar quando tiver colunas faltantes
             grouped_data.index.name = 'FIDC'
+
             grouped_data = self._create_additional_columns(grouped_data)
 
             name = "FIDCS_" + str(date).replace("-", "_") + ".csv"
@@ -338,6 +367,7 @@ class Grouper(object):
 
             grouped_data.to_csv(path_out, sep=';', encoding='utf-8-sig', decimal = '.')
             logger.info(f"Agrupamento feito com Sucesso. Arquivo salvo em {path_out}")
+
 
             return grouped_data
         except Exception as e:
