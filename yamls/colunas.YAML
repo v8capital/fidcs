@@ -1,0 +1,252 @@
+PL Total:
+  - Patrimônio Líquido Total
+  - PL Total Classe (R$ mil)
+
+PL Sênior:
+  - PL Senior
+  - "PL Senior "
+  - "PL Sênior "
+
+PL Mezanino:
+  - PL Subordinada Mezanino
+
+PL Subordinada Jr:
+  - PL Subordinada Jr.
+  - "PL Subordinada Jr:"
+  - PL Subordinada Junior
+  - PL Subordinada Júnior
+  - "PL Subordinada Júnior,"
+  - "PL Subordinada Junior,"
+  - "PL Subordinada Jr,"
+  - PL Subordinado
+
+Carteira (Direitos Creditórios):
+  - Carteira (Direiros Creditórios)
+  - Carteira Direitos Creditórios (Vlr Presente)
+  - Carteira Total (Direitos Creditórios)
+  - Direitos Creditórios
+  - Total Direitos Creditórios (R$ mil)
+  - DIREITOS CREDITORIOS
+  - Total Carteira (Direitos Creditórios)
+
+Quantidade de Cedentes:
+  - Qtidade Cedentes
+  - Quantidade Cedentes
+  - "# cedentes"
+  - Cedentes com crédito tomado (*)
+
+Quantidade de Sacados:
+  - Qtidade Sacados
+  - Quantidade Sacados
+  - "# sacados"
+  - Sacados com crédito tomado (*)
+
+Caixa/Disponibilidades:
+  - Caixa+Disponibilidades
+  - CAIXA
+
+Taxa Média:
+  - TIR - Mês -  Carteira (Dir.Creditórios)
+  - Taxa Média Recebíveis Média ponderada
+  - Taxa Média a.m
+  - Taxa Média a.m (*)
+  - Taxa Média (a.m.)
+
+Taxa Ponderada de Cessão:
+  - Taxa Ponderada de Cessao
+# tem q ver
+
+Prazo Médio:
+  - Prazo Médio Carteira (Dir.Creditórios) D.U
+  - Prazo médio
+  # - Prazo Médio Recebíveis Estoque (dias úteis)
+  - Prazo Médio Operações no Mês
+  - Prazo medio
+  - Prazo médio aquisição no mês
+  - Prazo medio (em dias corridos)
+  - Prazo medio (dia útil)
+  - Prazo médio  (dias úteis)
+  - Prazo médio (DU)
+
+Ticket Médio:
+  - Ticket Médio (Valor Presente)
+
+Retorno Cota Subordinada:
+  - Rentabilidade Subordinada
+  - Retorno Cota Subordinada - Rentabilidade
+
+Cheques:
+  - Cheque
+  - Cheque (Vlr Presente-PDD)
+  - Carteira (Cheques - Anima)
+  - "*Cheque*"
+
+Duplicata:
+  - "*Duplicata*"
+  - Duplicatas
+  - Duplicata (Vlr Presente-PDD)
+  - Carteira (Duplicatas - Anima)
+
+Duplicata de Serviço Físico:
+  - 'Duplicata de Servico Fisico'
+  - 'Duplicata de Serviço Físico'
+  - 'Duplicata de Serviços'
+
+Contrato:
+  - Contrato Físico
+  - Contrato Fisico
+  - Contrato (Vlr Presente-PDD)
+  - "*Contrato*"
+
+Nota Comercial:
+  - "Nota Comercial "
+  - "*Nota Comercial*"
+
+Confissão de Dívida:
+  - Confissao de Divida
+  - Confissão de Divida
+  - Confissão de Dívida
+  - "*Confissao de Divida*"
+
+Nota Promissória:
+  - Nota Promissoria
+  - Nota Promissoria Fisica
+  - Nota Promissória (Vlr Presente-PDD)
+  - Promissoria
+  - Promissória
+  - "*Promissoria*"
+
+CCB:
+  - CCB PRE
+  - "CCB "
+  - CCB (Vlr Presente-PDD)
+  - "*CCB PRE*"
+
+Resgates Subordinada Jr.:
+  - Amortização e resgates Subordinada Jr.
+  - Captação/Resgate Subordinada Junior
+
+Resgates Subordinada Mezanino:
+  - Amortização e resgates Mez
+  - Captação/Resgate Subordinada Mezanino
+
+# valor negativo, tem que ver
+Resgates Sênior:
+  - Amortização e resgates Sênior
+  - Captação/Resgate Superiores/Sêniores
+
+Vencidos Total:
+  - Vencidos Total (R$) (Vlr Presente-PDD)
+  - "Vencidos Total (Base: Último Dia Útil do Mês)"
+  - Vencidos Total (Singulare)
+  - Vencidos Total (sem WO)
+  - Vencidos
+  - Vencidos (1 até 120 dias)
+  - "Aging List - Vencidos, Vencimento Original"
+#checar dps esse PDD Total Vencido (Base: Último Dia Útil do Mês) e PDD Total (sem WO)
+PDD Total:
+  - PDD
+  - PDD Total (R$) (Vlr PDD)
+  - "PDD Total Vencido (Base: Último Dia Útil do Mês)"
+  - PDD Total (sem WO)
+  - "PDD Total Vencido"
+
+PDD À Vencer:
+  - PDD À Vencer (Devido efeito vagão)
+  - PDD à Vencer
+
+Liquidado Total (R$):
+  - Liquidado Total(R$)
+  - Total Liquidados
+  - Liquidados (R$)
+  - Liquidados Total
+  - Liquidados Normal ou Parcial (R$)
+  - Liquidados - Vencimento no Mês
+  - Volume Liquidado
+  - Volume liquidado
+  - "Liquidados - realizado no Mês "
+  - Liquidados
+
+Liquidado Antecipadamente:
+  - Liquidado antecipadamente
+  - Liquidado antes do vencimento
+  - Antecipado
+  - 'Liquidados antes do vencimento'
+
+Liquidado no Prazo:
+  - Liquidados no Prazo
+  - Liquidados na data
+  - D0
+  - Liquidado no prazo
+  #- 'Liquidados (R$) em dia'
+
+Liquidado Vencido:
+  - 'Liquidados (R$) em atraso'
+  - Liquidado vencido
+
+Entre D1-D5:
+  - Entre D1-D5
+
+Entre D1-D15:
+  - Entre D1-D15
+  - Vencidos até 15 dias
+
+Entre D6-D15:
+  - Entre D6-D15
+
+Entre D16-D30:
+  - Vencidos até 30 dias
+
+Acima de D30:
+  - Acima D30
+
+Entre D31-D90:
+  - Vencidos até 90 dias
+
+Entre D91-D120:
+  - Vencidos até 120 dias
+
+Acima de D120:
+  - Vencidos acima de 120 dias
+
+Recompra (R$):
+  - "*Recompra*"
+  - Recompra
+  - Recompra do Valor Operado no Mês
+  - Recompra dentro de borderô (R$)
+  - Recompra CVM (R$)
+  - "Recompra - realizada no Mês "
+  - "Recompra por Mês de Baixa dos Títulos"
+
+Concentração Top 10 Cedentes (R$):
+  - 10 Maiores Cedentes (R$)
+  - "Concentrações 10 Maiores Cedentes (R$)\n (Vlr Presente-PDD)"
+  - Concentrações Top10 Cedentes (R$)
+  - Concentrações Cedentes (R$)
+  - Top 10 Cedentes
+
+Concentração Top 10 Sacados (R$):
+  - 10 Maiores Sacados (R$)
+  - "Concentrações 10 Maiores Sacados (R$) \n(Vlr Presente-PDD)"
+  - Concentrações Top10 Sacados (R$)
+  - Concentrações Sacados (R$)
+  - Top 10 Sacados
+
+Número de Funcionários:
+  - Numero de funcionarios
+  - Numero de funcionarios  CLT (*)
+
+Volume Operado:
+  - Volume Operado no Mês (Vlr Nominal)
+  - Volume operado
+  - Valor Operado no Mês
+  - Valor Total Operado
+  - Volume Operado (desembolso)
+  - Valor Total Operado Nominal
+
+Valor Pago nas Operações no Mês:
+  - Valor Pago nas Operacoes no Mes
+  - Valor Pago nas Operações no Mês
+
+Fundo Soberano:
+  - "Fundo Soberano "
