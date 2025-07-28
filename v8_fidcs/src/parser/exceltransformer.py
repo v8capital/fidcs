@@ -16,7 +16,11 @@ import os
 
 pd.set_option('future.no_silent_downcasting', True)
 
-PATH = os.path.join(os.getcwd(), 'YAMLs')
+# Caminho do arquivo (onde o script está salvo)
+script_path = os.path.abspath(__file__)
+script_dir = os.path.dirname(script_path)
+
+PATH = os.path.join(script_dir, "..","..", "..", 'yamls')
 
 logger = LogFIDC()
 
@@ -29,7 +33,7 @@ class ExcelTransformer(object):
         self.path_save = path_save
 
         sheet_names =  pd.ExcelFile(self.path_read).sheet_names
-        patterns_fidcs = load_yaml(os.path.join(PATH, "FIDCs.yaml"))
+        patterns_fidcs = load_yaml(os.path.join(PATH, "fidcs.yaml"))
         type, pattern = self._check_name(name, patterns_fidcs)
 
         if len(sheet_names) > 1 and type in ["ORRAM", "MULTIASSET", "FIRMA"]:
@@ -302,6 +306,8 @@ class ExcelTransformer(object):
             table_copy = table_copy[
                 ~(pd.to_datetime(indexes.index, errors="coerce")).isna()
             ]
+            if self.fidc.name == "IOXII":
+                self.fidc.name = "IOXII(OXSS)"
 
         # -------- M8 ------------------------------------------------------ #
         elif fidc_type == "M8":
@@ -484,19 +490,18 @@ class ExcelTransformer(object):
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, _ = self._standardize(table_copy, indexes, drop_item=False, reset_index=False)
 
-            self.fidc.name = "IOXII"
+            self.fidc.name = "IOXII(OXSS)"
 
         # -------- IOSAN --------------------------------------------------- #
-        elif fidc_type == "IOSAN":
+        elif fidc_type == "IOXI(IOSAN)":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy, "FIDC")
             table_copy, indexes = self._standardize(table_copy, indexes, subset = "FIDC")
             table_copy = self.fidc.correct_percentages(
                 table_copy, "PL Total"
             )
-
             table_copy = self.fidc.correct_column_names(table_copy)
-
             self._set_index(table_copy, indexes)
+            self.fidc.name = "IOXI(IOSAN)"
 
         # ----------------------------------------------------------------- #
         # Salvar / atualizar instância

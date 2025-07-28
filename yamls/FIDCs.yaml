@@ -1,5 +1,3 @@
-#TODO: depois ver possibilidade em separar em colunas obrigatorias e opcionais
-
 'TERCON':
   - 'COLUMNS':
         - '(?i)\s*PL\s+Total\s*': 'value'
@@ -61,20 +59,22 @@
         - '(?i)\s*FOPA\s*': 'value'
         - '(?i)\s*Colaboradores\s*': 'value'
   - 'FUNDS':
-      - 'ARTICO'
-      - 'CONFIANCA'
-      - 'AUDAX'
-      - 'FATTOR'
-      - 'IOXII'
-      #- 'IOXI'
-      - 'IOXII'
-      - 'MATRIZ'
-      - 'NOVACAPITAL'
-      - 'STARS'
-      - 'ACREDITAR'
-      - 'VALECRED'
-      - 'ONIX'
-      - 'SIMPALA'
+    - 'ARTICO'
+    - 'CONFIANCA'
+    - 'AUDAX'
+    - 'FATTOR'
+    - 'IOXII'
+    #- 'IOXI'
+    - 'IOXII'
+    - 'MATRIZ'
+    - 'NOVACAPITAL'
+    - 'STARS'
+    - 'ACREDITAR'
+    - 'VALECRED'
+    - 'ONIX'
+    - 'SIMPALA'
+    - 'DCASH'
+    - 'MULTIASSET(TERCON)'
 
 'M8':
   - 'COLUMNS':
@@ -835,7 +835,7 @@
       - '(?i)\s*Maior\s+Sacado\s*-\s*S/PL\s*': 'percent'
 
 RNX:
-  - COLUNAS:
+  - COLUMNS:
       - '(?i)\s*PL\s+Total\s*': 'value'
       - '(?i)\s*PL\s+Sênior\s*': 'value'
       - '(?i)\s*PL\s+Mezanino\s*': 'value'
@@ -951,7 +951,7 @@ RNX:
       - '(?i)\s*NATUREZA\s+DOS\s+RECEB[ÍI]VEIS\s*': 'value'
 
 SABIA:
-  - COLUNAS:
+  - COLUMNS:
       - '(?i)\s*PL\s+Total\s*': 'value'
       - '(?i)\s*PL\s+Sênior\s*': 'value'
       - '(?i)\s*PL\s+Mezanino\s*': 'value'
@@ -997,7 +997,7 @@ SABIA:
       - '(?i)\s*Remunera[çc][ãa]o\s+consultoria\s*': 'value'
 
 OXSS:
-  - COLUNAS:
+  - COLUMNS:
       - '(?i)\s*PL\s+Total\s*': 'value'
       - '(?i)\s*PL\s+Sênior\s*': 'value'
       - '(?i)\s*PL\s+Mezanino\s*': 'value'
@@ -1038,8 +1038,8 @@ OXSS:
       - '(?i)\s*Retorno\s+Cota\s+Subordinada\s*': 'value'
       - '(?i)\s*Retorno\s+Cota\s+Subordinada\s+-\s+12\s+Meses\s*': 'value'
 
-IOSAN:
-  - COLUNAS:
+IOXI(IOSAN):
+  - COLUMNS:
       - '(?i)\s*PL\s+Total\s*': 'value'
       - '(?i)\s*PL\s+Sênior\s*': 'value'
       - '(?i)\s*PL\s+Mezanino\s*': 'value'
@@ -1081,3 +1081,6 @@ IOSAN:
       - '(?i)\s*Exposi[cç][aã]o\s+total\s+a\s+cedentes\s+em\s+RJ\s*\(R\$\)\s*': 'value'
       - '(?i)\s*Exposi[cç][aã]o\s+ao\s+maior\s+cedente\s+em\s+RJ\s*\(R\$\)\s*': 'value'
       - '(?i)\s*Volume\s+Operado\s*\(VOP\)\s*': 'removepar'
+  - 'FUNDS':
+      - 'IOXI'
+      - 'IOSAN'

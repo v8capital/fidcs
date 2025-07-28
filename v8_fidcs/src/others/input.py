@@ -9,6 +9,8 @@ from classes.exceltransformer import ExcelTransformer
 from classes.grouper import Grouper
 from classes.logger import LogFIDC
 
+# ESSA CLASSE DO STREAMLIT NÃO TÁ MAIS FUNCIONANDO
+# DEPOIS VOU AJEITAR
 
 class Input:
     def __init__(self):

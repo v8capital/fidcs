@@ -15,6 +15,8 @@ class Transformer(object):
         self.path_handle = path_handle
         self.calendar_handle = calendar_handle
 
+        self.fidc_renames = {"ONIXOLD": "ONIX", "IOSAN": "IOXI(IOSAN)", "OXSS": "IOXII(OXSS)", "IOXII": "IOXII(OXSS)"}
+
         if folder_root is None:
             self.folder_root = self.path_handle.FIDCS_RELATORIOS_GERAIS
         else:
@@ -44,7 +46,8 @@ class Transformer(object):
                     file_name_read = f"FIDC_{fidc_name}_" + date + ".xlsx"
                     path_target_r = os.path.join(self.folder_root, "00_RAW", file_name_read)
 
-                    file_name_save = f"FIDC_{fidc_name}_" + date + ".csv"
+                    fidc_name_updated = self.fidc_renames.get(fidc_name, fidc_name)
+                    file_name_save = f"FIDC_{fidc_name_updated}_" + date + ".csv"
                     path_target_s = os.path.join(self.folder_root, "01_PARSED", file_name_save)
 
                     os.makedirs(os.path.dirname(path_target_s), exist_ok=True)
@@ -55,6 +58,7 @@ class Transformer(object):
                 except Exception as e:
                     fidc_list.remove(fidc_name)
                     logger.error(f"O FIDC {fidc_name} não foi tratado, devido ao erro: {e}")
+            fidc_list = [self.fidc_renames.get(fidc, fidc) for fidc in fidc_list]
             return fidc_list
         except Exception as e:
             logger.error(f"Transformação dos Dados para o Mês {date}: {e}")

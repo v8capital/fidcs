@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Optional
 from v8_fidcs.src.others.logger import LogFIDC
 #from v8_utilities.yaml_functions import load_yaml
 
@@ -13,7 +13,7 @@ logger = LogFIDC()
 
 class FIDC():
     def __init__(self, path_handle, calendar_handle, table: pd.DataFrame, raw_table: Union[pd.DataFrame, list], name: str, type: str, pattern: list) -> None:
-        #patterns_fidcs = load_yaml(os.path.join(PATH, "FIDCs.yaml"))
+        #patterns_fidcs = load_yaml(os.path.join(PATH, "fidcs.yaml"))
         self.path_handle = path_handle
         self.calendar_handle = calendar_handle
 
@@ -117,7 +117,7 @@ class FIDC():
             data = data.drop(index=rows_to_drop)
 
         # 3. Conversão final para float64 (“double”)
-        return data.astype("double")
+        return data.astype("double").abs()
 
     def absolute_values(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -350,7 +350,6 @@ class FIDC():
         column: Optional[str] = next((col for col in data.columns if column_regex and re.fullmatch(column_regex, col)),
                                      None)
 
-        print(column, columns_to_sum, data[columns_to_sum].sum(axis=1))
         if column:
             data[column] = data[columns_to_sum].sum(axis=1)
 

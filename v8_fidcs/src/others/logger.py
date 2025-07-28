@@ -1,4 +1,4 @@
-from utilities.v8_utilities.logv8 import LogV8
+from v8_utilities.logv8 import LogV8
 from datetime import date
 from pathlib import Path
 

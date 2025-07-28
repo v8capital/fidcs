@@ -12,7 +12,10 @@ import re
 import os
 import datetime
 
-PATH = os.path.join(os.getcwd(), 'YAMLs')
+script_path = os.path.abspath(__file__)
+script_dir = os.path.dirname(script_path)
+
+PATH = os.path.join(script_dir, "..","..", "..", 'yamls')
 
 logger = LogFIDC()
 
@@ -613,10 +616,7 @@ class Grouper(object):
             date(datetime): data no formato de datetime que vai definir o agrupamento
 
         Returns:
-            None
-
-        Raises:
-            None (erros são capturados e logados)
+            List[str]: lista que corresponde ao nome dos fidcs que foram agrupados
         """
         try:
             date_str = date.strftime("%Y_%m_%d")
@@ -634,6 +634,8 @@ class Grouper(object):
 
             grouped_data.to_csv(file_to_save, sep=';', encoding='utf-8-sig', decimal='.')
             logger.info(f"Arquivo salvo com sucesso em {file_to_save}")
+            fidc_list_final = grouped_data.index.to_list()
+            return fidc_list_final
 
         except Exception as e:
             logger.error(f"Problema em Agrupar e salvar os Arquivos {e}.")

@@ -56,17 +56,19 @@ Taxa Ponderada de Cessão:
   - Taxa Ponderada de Cessao
 # tem q ver
 
-Prazo Médio:
+Prazo Médio (D.U):
   - Prazo Médio Carteira (Dir.Creditórios) D.U
-  - Prazo médio
   # - Prazo Médio Recebíveis Estoque (dias úteis)
-  - Prazo Médio Operações no Mês
-  - Prazo medio
-  - Prazo médio aquisição no mês
-  - Prazo medio (em dias corridos)
   - Prazo medio (dia útil)
   - Prazo médio  (dias úteis)
   - Prazo médio (DU)
+
+Prazo Médio (D.C):
+  - Prazo medio (em dias corridos)
+  - Prazo Médio Operações no Mês
+  - Prazo médio aquisição no mês
+  - Prazo medio
+  - Prazo médio
 
 Ticket Médio:
   - Ticket Médio (Valor Presente)
