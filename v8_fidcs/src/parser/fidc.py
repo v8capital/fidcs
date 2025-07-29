@@ -409,3 +409,15 @@ class FIDC():
             dates[mask_na] = dates2
 
         return dates
+
+    def rename_columns(self, data:pd.DataFrame, arr_names:list[str]):
+        # vo fazer essa função de forma simplificada para facilitar minha vida
+        regex_rename = list({k for d in self.pattern for k, v in d.items() if v == "rename"})
+        renames = [val for val in data.columns if any(re.fullmatch(rx, val) for rx in regex_rename)]
+
+        mapeamento = dict(zip(renames, arr_names))
+
+        # Renomeie as colunas do DataFrame
+        data.rename(columns=mapeamento, inplace=True)
+
+        return data

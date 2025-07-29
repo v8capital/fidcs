@@ -174,12 +174,14 @@ Liquidado Antecipadamente:
   - Liquidado antes do vencimento
   - Antecipado
   - 'Liquidados antes do vencimento'
+  - Antes do Vencimento
 
 Liquidado no Prazo:
   - Liquidados no Prazo
   - Liquidados na data
   - D0
   - Liquidado no prazo
+  - Na data
   #- 'Liquidados (R$) em dia'
 
 Liquidado Vencido:

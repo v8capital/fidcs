@@ -306,8 +306,11 @@ class ExcelTransformer(object):
             table_copy = table_copy[
                 ~(pd.to_datetime(indexes.index, errors="coerce")).isna()
             ]
+
             if self.fidc.name == "IOXII":
                 self.fidc.name = "IOXII(OXSS)"
+            elif self.fidc.name == "MULTIASSET(TERCON)":
+                self.fidc.name = "MULTIASSET"
 
         # -------- M8 ------------------------------------------------------ #
         elif fidc_type == "M8":
@@ -502,6 +505,15 @@ class ExcelTransformer(object):
             table_copy = self.fidc.correct_column_names(table_copy)
             self._set_index(table_copy, indexes)
             self.fidc.name = "IOXI(IOSAN)"
+
+        # -------- INTERBANK ------------------------------------------------ #
+        elif fidc_type == "INTERBANK":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, indexes = self._standardize(table_copy, indexes, drop_item=False, reset_index=False)
+            table_copy = table_copy[
+                ~(pd.to_datetime(indexes.index, errors="coerce")).isna()
+            ]
+            table_copy = self.fidc.rename_columns(table_copy, ["10 Maiores Cedentes (R$)", "Cedente 1", "10 Maiores Sacados (R$)", "Sacado 1", "Antecipado", "D0", "Entre D1-D5", "Entre D6-D15", "Entre D16-D30", "Acima de D30"])
 
         # ----------------------------------------------------------------- #
         # Salvar / atualizar instância

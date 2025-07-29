@@ -14,15 +14,18 @@ from v8_utilities.anbima_calendar import Calendar
 
 logger = LogFIDC()
 
-def extract(path_handle, calendar_handle, date, folder_root = None):
+def extract(path_handle, calendar_handle, date,  fidc_list = None, folder_root = None):
     try:
         logger.info(f"Iniciando Processo de Extração dos Dados para o Mês {date}.")
 
         extr = Extractor(path_handle, calendar_handle, "FIDCS", folder_root)
-        fidc_list = extr.list_fidcs(date)
+
+        if fidc_list is None:
+            fidc_list = extr.list_fidcs(date)
 
         if not fidc_list:
             raise ValueError("Nenhum FIDC encontrado na listagem inicial.")
+
         fidc_list_downloaded = extr.download_fidcs(date, fidc_list)
 
         if not fidc_list_downloaded:
@@ -96,15 +99,15 @@ def group(path_handle, calendar_handle, date, fidc_list, folder_root = None):
         logger.error(f"Erro total no agrupamento: {e}")
         return []
 
-def run():
+def run(fidc_list = None):
     path_handle = PathV8()
     calendar_handle = Calendar(folder = ".")
 
-    date_ = datetime.date(2025, 6, 22)
+    date_ = datetime.date(2025, 6, 1)
 
     date = calendar_handle.get_start_of_month(date_, only_workdays = False)
 
-    fidc_list = extract(path_handle, calendar_handle, date_)
+    fidc_list = extract(path_handle, calendar_handle, date_, fidc_list)
     fidc_list = transform(path_handle, calendar_handle, date, fidc_list)
     fidc_list = group(path_handle, calendar_handle, date, fidc_list)
 

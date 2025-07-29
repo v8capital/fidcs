@@ -113,17 +113,17 @@ class Grouper(object):
         columns = pd.Series(df.columns)
 
         pattern = [
-            r"^\d+\s*a\s*\d+$",
-            r"^\d+\s*-\s*\d+$",
-            r"^\d+\s*-\s*\d+\s*dias$",
-            r"^de\s+\d+\s*a\s+\d+\s*dias$",
-            r"^\d+\s*e\s*\d+\s*dias$",
-            r"^acima\s+de\s+\d+\s*dias$",
-            r"^superior\s+a\s+\d+$",
-            r"^superior\s+\d+$",
-            r"^>\s*\d+$",
-            r"^até\s+\d+$",
-            r"^até\s+\d+\s*dias$"
+            r"(?i)^\d+\s*a\s*\d+$",
+            r"(?i)^\d+\s*-\s*\d+$",
+            r"(?i)^\d+\s*-\s*\d+\s*dias$",
+            r"(?i)^de\s+\d+\s*a\s+\d+\s*dias$",
+            r"(?i)^\d+\s*e\s*\d+\s*dias$",
+            r"(?i)^acima\s+de\s+\d+\s*dias$",
+            r"(?i)^superior\s+a\s+\d+$",
+            r"(?i)^superior\s+\d+$",
+            r"(?i)^>\s*\d+$",
+            r"(?i)^até\s+\d+$",
+            r"(?i)^até\s+\d+\s*dias$"
         ]
 
         mask = columns.apply(lambda entry: self._verify_pattern(entry, pattern))
@@ -283,7 +283,6 @@ class Grouper(object):
             list_dates = []
 
             for key, df in self.csv_dict.items():
-
                 if date_str in df.index:
                     row = df.loc[date_str]
                     row_df = pd.DataFrame([row], index=[key])
@@ -580,7 +579,6 @@ class Grouper(object):
                             for k in by_name.keys()}
 
             self._filter_final_columns(column_names)
-
             grouped_data = self._group_by_date(date)
 
             regex_cols = list(pd.Series(chain.from_iterable(by_regex.values())).drop_duplicates())
