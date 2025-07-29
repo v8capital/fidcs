@@ -1,5 +1,3 @@
-import os
-import datetime
 import pandas as pd
 
 from v8_fidcs.src.services.extractor import Extractor
@@ -9,23 +7,26 @@ from v8_fidcs.src.others.logger import LogFIDC
 from v8_utilities.paths import PathV8
 from v8_utilities.anbima_calendar import Calendar
 
-#parsed_path = os.path.join(folder_root, "01_PARSED")
-#grouped_path = os.path.join(folder_root, "02_GROUPED")
+import os
+import datetime
+
+# parsed_path = os.path.join(folder_root, "01_PARSED")
+# grouped_path = os.path.join(folder_root, "02_GROUPED")
 
 logger = LogFIDC()
 
-def extract(path_handle, calendar_handle, date,  fidc_list = None, folder_root = None):
+
+def extract(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Extração dos Dados para o Mês {date}.")
 
         extr = Extractor(path_handle, calendar_handle, "FIDCS", folder_root)
 
-        if fidc_list is None:
+        if not fidc_list:
             fidc_list = extr.list_fidcs(date)
 
         if not fidc_list:
             raise ValueError("Nenhum FIDC encontrado na listagem inicial.")
-
         fidc_list_downloaded = extr.download_fidcs(date, fidc_list)
 
         if not fidc_list_downloaded:
@@ -46,7 +47,8 @@ def extract(path_handle, calendar_handle, date,  fidc_list = None, folder_root =
         logger.error(f"Erro total na extração: {e}")
         return []
 
-def transform(path_handle, calendar_handle, date, fidc_list, folder_root = None):
+
+def transform(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Tratamento dos Dados para o Mês {date}.")
 
@@ -75,7 +77,8 @@ def transform(path_handle, calendar_handle, date, fidc_list, folder_root = None)
 
         return []
 
-def group(path_handle, calendar_handle, date, fidc_list, folder_root = None):
+
+def group(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Agrupamento dos Dados para o Mês {date}.")
 
@@ -98,17 +101,3 @@ def group(path_handle, calendar_handle, date, fidc_list, folder_root = None):
     except Exception as e:
         logger.error(f"Erro total no agrupamento: {e}")
         return []
-
-def run(fidc_list = None):
-    path_handle = PathV8()
-    calendar_handle = Calendar(folder = ".")
-
-    date_ = datetime.date(2025, 6, 1)
-
-    date = calendar_handle.get_start_of_month(date_, only_workdays = False)
-
-    fidc_list = extract(path_handle, calendar_handle, date_, fidc_list)
-    fidc_list = transform(path_handle, calendar_handle, date, fidc_list)
-    fidc_list = group(path_handle, calendar_handle, date, fidc_list)
-
-    print(fidc_list)
