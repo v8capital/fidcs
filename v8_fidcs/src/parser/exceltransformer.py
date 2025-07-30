@@ -407,6 +407,7 @@ class ExcelTransformer(object):
             )
             table_copy, indexes = self._standardize(table_copy, indexes, subset = "Descrição/Período")
             table_copy = self.fidc.clean_column_names(table_copy)
+            table_copy["Vencidos Total - PDD"] = table_copy["Vencidos Total"]
             self._set_index(table_copy, indexes)
 
         # -------- SOLAR --------------------------------------------------- #
@@ -415,7 +416,6 @@ class ExcelTransformer(object):
             table_copy, indexes = self._standardize(table_copy, indexes)
             self._set_index(table_copy, indexes)
             table_copy = self.fidc.correct_values(table_copy)
-            table_copy = self.fidc.absolute_values(table_copy)
             table_copy = self.fidc.correct_percentages(
                 table_copy, "PL Total Classe (R$ mil)"
             )

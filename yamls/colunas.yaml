@@ -138,13 +138,16 @@ Resgates Sênior:
   - Captação/Resgate Superiores/Sêniores
 
 Vencidos Total:
-  - Vencidos Total (R$) (Vlr Presente-PDD)
   - "Vencidos Total (Base: Último Dia Útil do Mês)"
   - Vencidos Total (Singulare)
   - Vencidos Total (sem WO)
   - Vencidos
   - Vencidos (1 até 120 dias)
   - "Aging List - Vencidos, Vencimento Original"
+
+Vencidos Total - PDD:
+  - Vencidos Total (R$) (Vlr Presente-PDD)
+
 #checar dps esse PDD Total Vencido (Base: Último Dia Útil do Mês) e PDD Total (sem WO)
 PDD Total:
   - PDD
@@ -174,14 +177,12 @@ Liquidado Antecipadamente:
   - Liquidado antes do vencimento
   - Antecipado
   - 'Liquidados antes do vencimento'
-  - Antes do Vencimento
 
 Liquidado no Prazo:
   - Liquidados no Prazo
   - Liquidados na data
   - D0
   - Liquidado no prazo
-  - Na data
   #- 'Liquidados (R$) em dia'
 
 Liquidado Vencido:

@@ -422,10 +422,15 @@ class Grouper(object):
             data["Subordinação Jr (%)"] = data["PL Subordinada Jr"] / data["PL Total"]
         if has_col("PDD Total") and has_col("PL Total"):
             data["PDD Total (PL%)"] = data["PDD Total"] / data["PL Total"]
+
         if has_col("Vencidos Total") and has_col("PL Total"):
             data["CVNP (PL%)"] = data["Vencidos Total"] / data["PL Total"]
         if "CVNP (PL%)" in data.columns and "PDD Total (PL%)" in data.columns:
             data["CVNP - PDD (PL%)"] = data["CVNP (PL%)"] - data["PDD Total (PL%)"]
+
+        if "Vencidos Total - PDD" in data.columns and has_col("PL Total"):
+            data["CVNP - PDD (PL%)"] = data["Vencidos Total - PDD"] / data["PL Total"]
+
         if has_col("Cedente 1") and has_col("PL Total"):
             data["Concentração Maior Cedente (PL%)"] = data["Cedente 1"] / data["PL Total"]
         if has_col("Sacado 1") and has_col("PL Total"):
