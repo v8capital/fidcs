@@ -307,15 +307,6 @@ class ExcelTransformer(object):
                 ~(pd.to_datetime(indexes.index, errors="coerce")).isna()
             ]
 
-            if self.fidc.name == "IOXII":
-                self.fidc.name = "IOXII(OXSS)"
-            elif self.fidc.name == "MULTIASSET(TERCON)":
-                self.fidc.name = "MULTIASSET"
-            elif self.fidc.name == "DCASH":
-                self.fidc.name = "DCASH(MATRIZ)"
-            elif self.fidc.name == "MATRIZ":
-                self.fidc.name = "DCASH(MATRIZ)"
-
         # -------- M8 ------------------------------------------------------ #
         elif fidc_type == "M8":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
@@ -357,7 +348,6 @@ class ExcelTransformer(object):
 
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
-            self.fidc.name = "FLUXASSET(ALFA)"
 
 
         # -------- BARCELONA ----------------------------------------------- #
@@ -445,8 +435,6 @@ class ExcelTransformer(object):
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
 
-            self.fidc.name = "ONIX"
-
         # -------- RAIZES -------------------------------------------------- #
         elif fidc_type == "RAIZES":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
@@ -499,7 +487,6 @@ class ExcelTransformer(object):
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, _ = self._standardize(table_copy, indexes, drop_item=False, reset_index=False)
 
-            self.fidc.name = "IOXII(OXSS)"
 
         # -------- IOSAN --------------------------------------------------- #
         elif fidc_type == "IOXI(IOSAN)":
@@ -510,7 +497,6 @@ class ExcelTransformer(object):
             )
             table_copy = self.fidc.correct_column_names(table_copy)
             self._set_index(table_copy, indexes)
-            self.fidc.name = "IOXI(IOSAN)"
 
         # -------- INTERBANK ------------------------------------------------ #
         elif fidc_type == "INTERBANK":
@@ -536,6 +522,3 @@ class ExcelTransformer(object):
         logger.info(f"Transformação finalizada e CSV salvo em {self.path_save}")
 
         return table_copy
-
-# apenas o check columns e o check name devem ser mantidos na classe
-# todos os outros irão para a classe FIDC, junto do self.pattern, self.table e afins

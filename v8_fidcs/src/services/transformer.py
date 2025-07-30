@@ -15,7 +15,12 @@ class Transformer(object):
         self.path_handle = path_handle
         self.calendar_handle = calendar_handle
 
-        self.fidc_renames = {"ONIXOLD": "ONIX", "IOSAN": "IOXI(IOSAN)", "OXSS": "IOXII(OXSS)", "IOXII": "IOXII(OXSS)"}
+        self.fidc_renames = {"ONIXOLD": "ONIX",
+                             "IOSAN": "IOXI(IOSAN)","IOXI": "IOXI(IOSAN)",
+                             "OXSS": "IOXII(OXSS)", "IOXII": "IOXII(OXSS)",
+                             "MULTIASSET(TERCON)":"MULTIASSET",
+                             "DCASH": "DCASH(MATRIZ)", "MATRIZ": "DCASH(MATRIZ)",
+                             "ALFA": "FLUXASSET(ALFA)", "FLUXASSET": "FLUXASSET(ALFA)"}
 
         if folder_root is None:
             self.folder_root = self.path_handle.FIDCS_RELATORIOS_GERAIS
