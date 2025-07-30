@@ -311,6 +311,10 @@ class ExcelTransformer(object):
                 self.fidc.name = "IOXII(OXSS)"
             elif self.fidc.name == "MULTIASSET(TERCON)":
                 self.fidc.name = "MULTIASSET"
+            elif self.fidc.name == "DCASH":
+                self.fidc.name = "DCASH(MATRIZ)"
+            elif self.fidc.name == "MATRIZ":
+                self.fidc.name = "DCASH(MATRIZ)"
 
         # -------- M8 ------------------------------------------------------ #
         elif fidc_type == "M8":
@@ -353,6 +357,8 @@ class ExcelTransformer(object):
 
             table_copy = self.fidc.create_10_biggests(table_copy, "Sacado")
             table_copy = self.fidc.create_10_biggests(table_copy, "Cedente")
+            self.fidc.name = "FLUXASSET(ALFA)"
+
 
         # -------- BARCELONA ----------------------------------------------- #
         elif fidc_type == "BARCELONA":

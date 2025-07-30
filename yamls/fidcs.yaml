@@ -303,6 +303,9 @@
       - '(?i)\s*N[uú]mero\s+de\s+funcion[áa]rios\s*': 'value'
       - '(?i)\s*Estimativa\s+folha\s*': 'value'
       - '(?i)\s*Remunera[cç][ãa]o\s+consultoria\s*': 'value'
+  - 'FUNDS':
+      - 'ALFA'
+      - 'FLUXASSET'
 
 'BARCELONA':
   - 'COLUMNS':
