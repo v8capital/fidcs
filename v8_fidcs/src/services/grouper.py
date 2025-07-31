@@ -429,7 +429,10 @@ class Grouper(object):
             data["CVNP - PDD (PL%)"] = data["CVNP (PL%)"] - data["PDD Total (PL%)"]
 
         if "Vencidos Total - PDD" in data.columns and has_col("PL Total"):
-            data["CVNP - PDD (PL%)"] = data["Vencidos Total - PDD"] / data["PL Total"]
+            if not has_col("CVNP - PDD (PL%)"):
+                data["CVNP - PDD (PL%)"] = np.nan
+            col = data["Vencidos Total - PDD"] / data["PL Total"]
+            data["CVNP - PDD (PL%)"] = data["CVNP - PDD (PL%)"].fillna(col)
 
         if has_col("Cedente 1") and has_col("PL Total"):
             data["Concentração Maior Cedente (PL%)"] = data["Cedente 1"] / data["PL Total"]
@@ -625,7 +628,6 @@ class Grouper(object):
             date_str = date.strftime("%Y_%m_%d")
 
             path_to_read = os.path.join(self.folder_root, "01_PARSED")
-
             path_to_save = os.path.join(self.folder_root, "02_REPORT")
             file_name_save = f"FIDCS_" + date_str + ".csv"
             file_to_save = os.path.join(path_to_save, file_name_save)
@@ -633,6 +635,7 @@ class Grouper(object):
             os.makedirs(os.path.dirname(file_to_save), exist_ok=True)
 
             self.read_csvs(date, fidc_list)
+
             grouped_data = self.group_fidcs(date)
 
             grouped_data.to_csv(file_to_save, sep=';', encoding='utf-8-sig', decimal='.')

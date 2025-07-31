@@ -407,7 +407,6 @@ class ExcelTransformer(object):
             )
             table_copy, indexes = self._standardize(table_copy, indexes, subset = "Descrição/Período")
             table_copy = self.fidc.clean_column_names(table_copy)
-            table_copy["Vencidos Total - PDD"] = table_copy["Vencidos Total"]
             self._set_index(table_copy, indexes)
 
         # -------- SOLAR --------------------------------------------------- #
@@ -486,7 +485,6 @@ class ExcelTransformer(object):
         elif fidc_type == "OXSS":
             table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
             table_copy, _ = self._standardize(table_copy, indexes, drop_item=False, reset_index=False)
-
 
         # -------- IOSAN --------------------------------------------------- #
         elif fidc_type == "IOXI(IOSAN)":
