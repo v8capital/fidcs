@@ -25,6 +25,7 @@ def extract(path_handle, calendar_handle, date, fidc_list, folder_root=None):
         if not fidc_list:
             fidc_list = extr.list_fidcs(date)
 
+        logger.info(f"FIDCS que devem ser baixados: {fidc_list}")
         if not fidc_list:
             raise ValueError("Nenhum FIDC encontrado na listagem inicial.")
         fidc_list_downloaded = extr.download_fidcs(date, fidc_list)
@@ -51,6 +52,7 @@ def extract(path_handle, calendar_handle, date, fidc_list, folder_root=None):
 def transform(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Tratamento dos Dados para o Mês {date}.")
+        logger.info(f"FIDCS que devem ser transformados: {fidc_list}")
 
         date_str = date.strftime("%Y_%m_%d")
 
@@ -81,6 +83,7 @@ def transform(path_handle, calendar_handle, date, fidc_list, folder_root=None):
 def group(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Agrupamento dos Dados para o Mês {date}.")
+        logger.info(f"FIDCS que devem ser agrupados: {fidc_list}")
 
         grouper = Grouper(path_handle, calendar_handle, folder_root)
         fidc_list_grouped = grouper.run(date)
