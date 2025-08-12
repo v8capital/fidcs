@@ -133,9 +133,14 @@ class Extractor(SharePoint):
             path_to_download = self._build_path(date)
             for fidc_name in fidc_list[:]:
                 try:
-                    file_path = f"{path_to_download}/{fidc_name}"
                     file_name = f"FIDC_{fidc_name}_{date_str}.xlsx"
                     path_target = os.path.join(raw_path, file_name)
+
+                    if os.path.exists(path_target):
+                        logger.info(f"Arquivo {file_name} já foi baixado. Pulando download.")
+                        continue  # pula para o próximo fidc_name
+
+                    file_path = f"{path_to_download}/{fidc_name}"
 
                     os.makedirs(os.path.dirname(path_target), exist_ok=True)
 

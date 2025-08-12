@@ -15,7 +15,6 @@ import datetime
 
 logger = LogFIDC()
 
-
 def extract(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Extração dos Dados para o Mês {date}.")
