@@ -482,13 +482,14 @@ class Grouper(object):
             data["Caixa/Disponibilidades (%PL)"] = data.apply(calc_caixa, axis=1)
 
         if has_col("PL Subordinada Jr") and has_col("PL Total"):
-            data["Alavancagem"] = (data["PL Subordinada Jr"] / data["PL Total"])
+            data["Alavancagem"] = (data["PL Total"] / data["PL Subordinada Jr"])
 
         if has_col("PL Subordinada Jr") and has_col("Concentração Top 10 Cedentes (R$)"):
             data["Indicador 1"] = (data["PL Subordinada Jr"] / data["Concentração Top 10 Cedentes (R$)"])
 
         if has_col("PL Subordinada Jr") and has_col("PL Mezanino") and has_col("Concentração Top 10 Cedentes (R$)"):
-            data["Indicador 2"] = (data["PL Subordinada Jr"] + data["PL Mezanino"]) / data["Concentração Top 10 Cedentes (R$)"]
+            data["Indicador 2"] = ((data["PL Subordinada Jr"] + data["PL Mezanino"])
+                                   / data["Concentração Top 10 Cedentes (R$)"])
 
         return data
 
