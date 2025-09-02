@@ -78,7 +78,6 @@ def transform(path_handle, calendar_handle, date, fidc_list, folder_root=None):
 
         return []
 
-
 def group(path_handle, calendar_handle, date, fidc_list, folder_root=None):
     try:
         logger.info(f"Iniciando Processo de Agrupamento dos Dados para o Mês {date}.")
