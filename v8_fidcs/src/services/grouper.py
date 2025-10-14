@@ -491,6 +491,19 @@ class Grouper(object):
             data["Indicador 2"] = ((data["PL Subordinada Jr"] + data["PL Mezanino"])
                                    / data["Concentração Top 10 Cedentes (R$)"])
 
+        # if has_col("Prazo Médio (D.U)"):
+        #     data["Prazo Médio (Padronizado D.C)"] = data["Prazo Médio (D.U)"] * 30/22
+        #
+        # if has_col("Prazo Médio (D.C)"):
+        #     data["Prazo Médio (Padronizado D.C)"] = data["Prazo Médio (D.C)"]
+        if has_col("Prazo Médio (D.C)") and has_col("Prazo Médio (D.U)"):
+            def calc_dc(row):
+                if pd.isna(row["Prazo Médio (D.U)"]):
+                    return row["Prazo Médio (D.C)"]
+                else:
+                    return row["Prazo Médio (D.U)"] * 30/22
+            data["Prazo Médio (Padronizado D.C)"] = data.apply(calc_dc, axis=1)
+
         return data
 
     def read_csvs(self, date: datetime, fidc_list: list[str] | None = None) -> None:
@@ -616,43 +629,76 @@ class Grouper(object):
             logger.error(f"Erro ao agrupar FIDCs para a data {date_str}: {e}")
             raise Exception(f"Erro ao agrupar FIDCs para a data {date_str}: {e}")
 
-
-    def run(self, date: datetime, fidc_list: list[str] | None = None) -> None:
+    def run(self, date_source: datetime, date_final: datetime, fidc_list: list[str] | None = None) -> list[str]:
         """
-        Executa o fluxo completo de leitura dos arquivos CSV, agrupamento dos dados dos FIDCs e salvamento do resultado.
+           Executa o fluxo completo de leitura, agrupamento e atualização incremental dos dados dos FIDCs.
 
-        Passos realizados:
-        - Cria os diretórios necessários para salvar os arquivos.
-        - Lê os arquivos CSV da pasta especificada.
-        - Agrupa os dados conforme a data definida na instância.
-        - Salva o arquivo CSV agrupado no caminho de saída especificado.
-        - Registra logs de sucesso ou erro no processo.
+           Este método realiza a leitura dos arquivos CSV processados, agrupa os dados conforme a data
+           informada e atualiza o arquivo consolidado de saída. Caso já exista um arquivo salvo, o conteúdo
+           anterior é preservado, e as linhas com o mesmo identificador de FIDC são atualizadas com os dados
+           mais recentes.
 
-        Args:
-            date(datetime): data no formato de datetime que vai definir o agrupamento
+           Estrutura de funcionamento:
+           - Cria os diretórios necessários para salvar o resultado final.
+           - Lê os arquivos CSV da pasta de entrada (01_PARSED).
+           - Agrupa os dados conforme a data especificada.
+           - Lê o arquivo existente (caso exista) da pasta 02_REPORT.
+           - Faz o merge entre o arquivo antigo e o novo, mantendo:
+               - Todas as linhas antigas.
+               - As linhas novas, substituindo as que possuem o mesmo FIDC.
+           - Salva o resultado final atualizado em formato CSV.
+           - Registra logs de sucesso ou erro no processo.
 
-        Returns:
-            List[str]: lista que corresponde ao nome dos fidcs que foram agrupados
-        """
+           Args:
+               date (datetime): Data utilizada para definir o agrupamento e o nome do arquivo de saída.
+               fidc_list (list[str] | None): Lista opcional com os nomes dos FIDCs a serem processados.
+
+           Returns:
+               list[str]: Lista contendo o nome (FIDC) de todos os fundos presentes no arquivo final.
+
+           Raises:
+               ValueError: Caso a coluna 'FIDC' não seja encontrada nos dados processados.
+               Exception: Caso ocorra qualquer erro no processo de agrupamento ou salvamento dos arquivos.
+           """
         try:
-            date_str = date.strftime("%Y_%m_%d")
+            date_str = date_final.strftime("%Y_%m_%d")
 
             path_to_read = os.path.join(self.folder_root, "01_PARSED")
             path_to_save = os.path.join(self.folder_root, "02_REPORT")
-            file_name_save = f"FIDCS_" + date_str + ".csv"
+            file_name_save = f"FIDCS_{date_str}.csv"
             file_to_save = os.path.join(path_to_save, file_name_save)
 
             os.makedirs(os.path.dirname(file_to_save), exist_ok=True)
 
-            self.read_csvs(date, fidc_list)
+            # --- lê os novos dados ---
+            self.read_csvs(date_source, fidc_list)
+            grouped_data = self.group_fidcs(date_final)
 
-            grouped_data = self.group_fidcs(date)
+            # --- se já existir um arquivo salvo, faz merge com atualização ---
+            if os.path.exists(file_to_save):
+                old_df = pd.read_csv(file_to_save, sep=';', encoding='utf-8-sig', dtype=str)
+                new_df = grouped_data.astype(str).reset_index()
 
-            grouped_data.to_csv(file_to_save, sep=';', encoding='utf-8-sig', decimal='.')
-            logger.info(f"Arquivo salvo com sucesso em {file_to_save}")
-            fidc_list_final = grouped_data.index.to_list()
+                # garante que a coluna FIDC existe e é chave
+                if "FIDC" not in new_df.columns:
+                    raise ValueError("Coluna 'FIDC' não encontrada nos dados novos.")
+
+                # remove duplicados antigos e insere os novos
+                merged = (
+                    pd.concat([old_df, new_df])
+                    .drop_duplicates(subset=["FIDC"], keep="last")
+                    .reset_index(drop=True)
+                )
+            else:
+                merged = grouped_data.astype(str).reset_index()
+
+            # --- salva o resultado final ---
+            merged.to_csv(file_to_save, sep=';', index=False, encoding='utf-8-sig')
+            logger.info(f"Arquivo salvo/atualizado com sucesso em {file_to_save}")
+
+            fidc_list_final = merged["FIDC"].tolist()
             return fidc_list_final
 
         except Exception as e:
-            logger.error(f"Problema em Agrupar e salvar os Arquivos {e}.")
-            raise Exception(f"Problema em Agrupar e salvar os Arquivos {e}.")
+            logger.error(f"Problema em agrupar e atualizar os arquivos: {e}.")
+            raise Exception(f"Problema em agrupar e atualizar os arquivos: {e}.")

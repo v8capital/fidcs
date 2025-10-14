@@ -42,7 +42,7 @@ class ExcelTransformer(object):
                 logger.warning(f"Mais de 3 sheets encontrada no FIDC {name}, serão lidas as 3 primeiras.")
                 sheet_names = sheet_names[:-1]  # remove a última planilha
             for sheet in sheet_names:
-                df = pd.read_excel(self.path_read, sheet_name=sheet, header = None)
+                df = pd.read_excel(self.path_read, sheet_name=sheet, header = None, decimal=',', thousands=".")
                 df = df.T
                 #print(df)
                 df.reset_index(drop=True, inplace=True)
@@ -51,14 +51,14 @@ class ExcelTransformer(object):
             table = pd.concat(tables, axis = 1)
             table = table.dropna(how='all')
         elif type == "SOLAR":
-            raw_table = pd.read_excel(self.path_read, sheet_name = "Dados", header = None)
+            raw_table = pd.read_excel(self.path_read, sheet_name = "Dados", header = None, decimal=',', thousands=".")
             table = raw_table.T
         elif len(sheet_names) > 1 and type not in ["ORRAM", "MULTIASSET"]:
             logger.warning(f"Mais de uma sheet encontrada no FIDC {name}, será lida apenas a primeira.")
-            raw_table = pd.read_excel(self.path_read)
+            raw_table = pd.read_excel(self.path_read, decimal=',', thousands=".")
             table = raw_table.T
         else:
-            raw_table = pd.read_excel(self.path_read)
+            raw_table = pd.read_excel(self.path_read, decimal=',', thousands=".")
             table = raw_table.T
 
         #self.table.to_csv("./PARSED/raw_" + name + ".csv", sep = ";",  encoding = "utf-8-sig")
@@ -511,9 +511,13 @@ class ExcelTransformer(object):
         table_copy = self.fidc.convert_to_double(table_copy)
         table_copy = self.fidc._days_to_start_of_month(table_copy)
         table_copy.index.name = "Data"
+
         #file_name = f"{self.fidc.name}" + "_" + date + ".csv"
 
         #path_out = os.path.join(path, file_name)
+        # print(table_copy.tail())
+        table_copy = table_copy.astype(str)
+        # print(table_copy.tail())
         table_copy.to_csv(self.path_save, sep = ";",  encoding = "utf-8-sig")
 
         self.fidc.table = table_copy.copy()

@@ -78,13 +78,13 @@ def transform(path_handle, calendar_handle, date, fidc_list, folder_root=None):
 
         return []
 
-def group(path_handle, calendar_handle, date, fidc_list, folder_root=None):
+def group(path_handle, calendar_handle, date_source, date_final, fidc_list, folder_root=None):
     try:
-        logger.info(f"Iniciando Processo de Agrupamento dos Dados para o Mês {date}.")
+        logger.info(f"Iniciando Processo de Agrupamento dos Dados para o Mês {date_final} da fonte de dados da data {date_source}.")
         logger.info(f"FIDCS que devem ser agrupados: {fidc_list}")
 
         grouper = Grouper(path_handle, calendar_handle, folder_root)
-        fidc_list_grouped = grouper.run(date)
+        fidc_list_grouped = grouper.run(date_source, date_final) # fidc_list, tem que veeeer
 
         if not fidc_list_grouped:
             logger.error("Erro total no agrupamento: lista final vazia.")
