@@ -22,8 +22,10 @@ class Transformer(object):
                              "STARS": "STARSBANK",
                              "SIGA": "SIGAPORTIFOLIO",
                              "IOSAN": "IOSAN(IOXI)","IOXI": "IOSAN(IOXI)",
+                             "IOSAN(NOVO)": "IOSAN(IOXI)", "IOXI(NOVO)": "IOSAN(IOXI)",
                              "OXSS": "OXSS(IOXII)", "IOXII": "OXSS(IOXII)",
-                             "MULTIASSET(TERCON)":"MULTIASSET",
+                             "MULTIASSET(NOVO)":"MULTIASSET",
+                             "BARCELONA(NOVO)": "BARCELONA",
                              "DCASH": "DCASH(MATRIX)", "MATRIZ": "DCASH(MATRIX)", 'MATRIX': "DCASH(MATRIX)",
                              "ALFA": "FLUXASSET", "FLUXASSET": "FLUXASSET"}
         if folder_root is None:

@@ -357,6 +357,17 @@ class ExcelTransformer(object):
             table_copy = self.fidc.correct_assets(table_copy)
             self._set_index(table_copy, indexes)
 
+
+        # -------- UNIQUEAAA -------------------------------------------------- #
+        if fidc_type == "UNIQUEAAA":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, _ = self._standardize(table_copy, indexes, drop_item=False, reset_index=False)
+            table_copy = table_copy[
+                ~(pd.to_datetime(indexes, errors="coerce")).isna()
+            ]
+            indexes = indexes[~(pd.to_datetime(indexes, errors="coerce")).isna()]
+            self._set_index(table_copy, indexes)
+
         # -------- MULTIASSET ---------------------------------------------- #
         elif fidc_type == "MULTIASSET":
             def _prep_sheet(sheet):
@@ -493,6 +504,12 @@ class ExcelTransformer(object):
             table_copy = self.fidc.correct_percentages(
                 table_copy, "PL Total"
             )
+            table_copy = self.fidc.correct_column_names(table_copy)
+            self._set_index(table_copy, indexes)
+
+        elif fidc_type == "IOXI(IOSAN)(NOVO)":
+            table_copy, indexes = self._extract_indexes_and_prepare(table_copy)
+            table_copy, indexes = self._standardize(table_copy, indexes, subset = "Item")
             table_copy = self.fidc.correct_column_names(table_copy)
             self._set_index(table_copy, indexes)
 
